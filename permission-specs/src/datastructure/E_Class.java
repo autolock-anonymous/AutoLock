@@ -12,7 +12,7 @@ public class E_Class {
 	private LinkedList<E_Field> fields; // class fields
 	private LinkedList<E_Method> methods;// list of declared methods
 	private LinkedList<E_InvokedMethod> invokMethods;// invoked methods
-	
+
 	//stores super class of this class
 	E_Class superClass;//super class
 	
