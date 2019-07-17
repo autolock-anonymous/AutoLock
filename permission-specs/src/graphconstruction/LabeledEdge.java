@@ -27,6 +27,7 @@ public class LabeledEdge{
             return v2;
         }
 
+        @Override
         public String toString() {
             return label;
         }

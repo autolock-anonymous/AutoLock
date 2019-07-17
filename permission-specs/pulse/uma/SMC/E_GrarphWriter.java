@@ -1,16 +1,14 @@
 package uma.SMC;
 
+import main.Main;
+import uma.structure.E_Class;
+import uma.structure.E_Package;
+import uma.structure.E_State;
+
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.LinkedList;
-
-import org.eclipse.core.resources.IWorkspace;
-import org.eclipse.core.resources.ResourcesPlugin;
-
-import uma.structure.E_Class;
-import uma.structure.E_Package;
-import uma.structure.E_State;
 
 public class E_GrarphWriter {
 	static int unreachableMethod=0;
@@ -67,9 +65,8 @@ public static void createGraph(){
 	
 	try{
 		BufferedWriter dot;
-		
-		IWorkspace workspace = ResourcesPlugin.getWorkspace(); 
-		String folder= workspace.getRoot().getLocation().toFile().getPath().toString();
+
+		String folder= Main.getPath();
 		
 		E_Package _pkg=EVMDD_SMC_Generator.getPkgObject();
 		LinkedList<E_Class> _listClasses=_pkg.getClasses();
@@ -82,10 +79,13 @@ public static void createGraph(){
 				dot.write("digraph stateTransitions { "+
 						_class.getName()+"[shape=plaintext,style=bold, fontsize=14];");
 				
-				for (E_State state:_class.getStates())
+				for (E_State state:_class.getStates()){
 					dot.write(state.getName()+"[shape=box,fontsize=12];\n");
-				for (String transition:_class.getTransitions())
+				}
+
+				for (String transition:_class.getTransitions()){
 					dot.write(transition+"\n");
+				}
 				dot.write("}");
 		 	dot.flush();
 		}

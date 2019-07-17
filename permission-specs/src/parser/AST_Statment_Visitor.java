@@ -178,9 +178,9 @@ public class AST_Statment_Visitor extends ASTVisitor {
 					if (l_child.getNodeType() == ASTNode.FIELD_ACCESS || l_child.getNodeType() == ASTNode.SIMPLE_NAME 
 							|| l_child.getNodeType() == ASTNode.QUALIFIED_NAME){
 							//||l_child.getNodeType() == ASTNode.ARRAY_ACCESS) {
-				
+
 						Expression childExp = (Expression) l_child;
-						AST_Parser.addAssignmentExpression(childExp,raExp,_method);
+						AST_Parser.addAssignmentExpression(childExp, raExp, _method);
 					}
 				}
 			}

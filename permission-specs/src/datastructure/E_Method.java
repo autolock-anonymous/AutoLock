@@ -4,70 +4,108 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
-import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.Expression;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
-//Set of Declared Methods
+/**
+ * Set of Declared Methods
+ */
 public class E_Method implements Cloneable {
-
-	private String name;// method name
-	private String identifier;// identifier
-	private String returnType;// method return type
-	private String declaringClass;// declaring class in which method is declared
-	private String declClassQName;// declaring class Qualified Name 
+	/**
+	 * method name
+	 */
+	private String name;
+	/**
+	 * 	identifier
+	 */
+	private String identifier;
+	/**
+	 *  method return type
+	 */
+	private String returnType;
+	/**
+	 *  declaring class in which method is declared
+	 */
+	private String declaringClass;
+	/**
+	 *  declaring class Qualified Name
+	 */
+	private String declClassQName;
 	private boolean isConstr;
 	private String modifier;
 	private List<Expression> st;
 	private List<String> state;
-	
-	private LinkedList<E_MParameter> parameters; // parameters list
-	private LinkedList<E_MRefParameter> refparams;// parameters that represents class fields
-	private LinkedList<E_MStatements> s;// set of method statements
-	private LinkedList<E_MRefField> refVariables; // a data structure that stores all the class fields, class objects and parameters accessed inside method
-	private LinkedList<E_MInvokedMethod> subMethods; // methods called inside a method
-	private LinkedList<E_MLocalVariable> localvariables;// variables declared inside a method
-	private E_Object qualifyingObject; // if any
+
+	/**
+	 *  parameters list
+	 */
+	private LinkedList<E_MParameter> parameters;
+	/**
+	 *  parameters that represents class fields
+	 */
+	private LinkedList<E_MRefParameter> refparams;
+	/**
+	 *  set of method statements
+	 */
+	private LinkedList<E_MStatements> s;
+	/**
+	 *  a data structure that stores all the class fields, class objects and parameters accessed inside method
+	 */
+	private LinkedList<E_MRefField> refVariables;
+	/**
+	 *  methods called inside a method
+	 */
+	private LinkedList<E_MInvokedMethod> subMethods;
+	/**
+	 *  variables declared inside a method
+	 */
+	private LinkedList<E_MLocalVariable> localvariables;
+	/**
+	 *  if any
+	 */
+	private E_Object qualifyingObject;
 	private String methodsignature = "";
-	
-	
-	//private String methodSpecifications;
-	// LinkedList<E_Specification> requires;
-	// LinkedList<E_Specification> ensures;
-	// LinkedList<String> concurrentMethods;
+
+
+	/// private String methodSpecifications;
+	/// LinkedList<E_Specification> requires;
+	/// LinkedList<E_Specification> ensures;
+	/// LinkedList<String> concurrentMethods;
 
 	public E_Method() {
-		parameters = new LinkedList<E_MParameter>();
-		subMethods = new LinkedList<E_MInvokedMethod>();
-		s = new LinkedList<E_MStatements>();
-		state = new LinkedList<String>();
-		refVariables = new LinkedList<E_MRefField>();
-		localvariables = new LinkedList<E_MLocalVariable>();
-		refparams = new LinkedList<E_MRefParameter>();
-		qualifyingObject = null;// receiver object
-		
+		parameters = new LinkedList<>();
+		subMethods = new LinkedList<>();
+		s = new LinkedList<>();
+		state = new LinkedList<>();
+		refVariables = new LinkedList<>();
+		localvariables = new LinkedList<>();
+		refparams = new LinkedList<>();
+
+		// receiver object
+		qualifyingObject = null;
+
 		isConstr = false;
-		
+
 	}
 	@Override
-    public boolean equals(Object o) {
-        
-		if (o == this) return true;
-        
-        if (!(o instanceof E_Method)) {
-            return false;
-        }
-        E_Method method = (E_Method) o;
-        return method.identifier.equals(identifier) &&
-        		method.getDeclClassQName().equals(declClassQName)
-        		&& method.getMethodSignatures().equals(methodsignature);
-        }
+	public boolean equals(Object o) {
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(identifier, declClassQName);
-    }
+		if (o == this) {
+			return true;
+		}
+
+		if (!(o instanceof E_Method)) {
+			return false;
+		}
+		E_Method method = (E_Method) o;
+		return method.identifier.equals(identifier) &&
+				method.getDeclClassQName().equals(declClassQName)
+				&& method.getMethodSignatures().equals(methodsignature);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(identifier, declClassQName);
+	}
 
 	public LinkedList<E_MRefField> getRefVariable() {
 		return refVariables;
@@ -197,7 +235,7 @@ public class E_Method implements Cloneable {
 	public void setModifier(String mod) {
 		this.modifier = mod;
 	}
-	
+
 	public List<Expression> getSt() {
 		return st;
 	}
@@ -211,8 +249,6 @@ public class E_Method implements Cloneable {
 		this.state= state;
 	}
 
-
-
 	/*
 	 * public LinkedList<E_Specification> getRequiresAP_TS(){ return requires; }
 	 * public LinkedList<E_Specification> getEnsuresAP_TS(){ return ensures; }
@@ -223,17 +259,17 @@ public class E_Method implements Cloneable {
 	 * toMethod) { concurrentMethods.add(toMethod); } public boolean
 	 * getRequiresClauseSatisfiability() { return requiresSatisfiability; }
 	 * public boolean isConcurrentMethod(String str) {
-	 * 
+	 *
 	 * for (String name:concurrentMethods){ if (name.compareTo(str)==0) return
 	 * true; }
-	 * 
+	 *
 	 * return false; } public Boolean isConcurrentMethod() {
-	 * 
+	 *
 	 * if (concurrentMethods.size()== 0) return false; else return true; }
 	 * public void addSpecifications(String annotation) {
-	 * 
+	 *
 	 * methodSpecifications=annotation;
-	 * 
+	 *
 	 * }
 	 */
 

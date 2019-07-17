@@ -7,8 +7,10 @@ public class E_MRefField {
 
 	private String fname;
 	private String ftype;
-	private String declaringType;// It should be E-Class object
-	private E_Method refMethod;// the method reference field belong to, it is not the declaring method of some reference field
+	// It should be E-Class object
+	private String declaringType;
+	// the method reference field belong to, it is not the declaring method of some reference field
+	private E_Method refMethod;
 	
 	// add local variables of methods as part of aliases of this referenced field 
 	LinkedList<E_MRefAlias> aliases;

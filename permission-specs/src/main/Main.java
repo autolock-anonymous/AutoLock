@@ -1,51 +1,138 @@
 package main;
 
+import datautilities.Data_Generator;
+import graphutilities.Graph_Controller;
+import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTParser;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import parser.AST_Parser;
+import parser.AST_Visitor;
+import top.liebes.env.Env;
+import top.liebes.util.ASTUtil;
+import top.liebes.util.FileUtil;
 
-import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.LinkedList;
-import java.util.List;
-
-import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jface.action.IAction;
-
-import parser.UserSelectedClasses_Analysis;
-import parser.Workspace_Utilities;
-import plugin.Sip4JIFileAction;
-
-import uma.SMC.UserSelectedClassesAnalysis;
+import java.io.*;
+import java.util.*;
+import java.util.logging.Logger;
 
 public class Main  {
 
 	static LinkedList<String> inputFiles;
 
-	public static void main(String[] args) {
+	private static final Logger logger = Logger.getLogger(Main.class.getName());
 
+	public static void main(String[] args) {
 		int num = args.length;
 
+		String folder = Env.SOURCE_FOLDER;
+		File root = new File(folder);
+		List<File> files = FileUtil.getFiles(root, new String[]{"java"});
+		List<CompilationUnit> cuList = new ArrayList<>();
+
+		Data_Generator.createNewPackage();
+
+		// Read java files from folder
+		for(File file : files){
+			final CompilationUnit cu = ASTUtil.getCompilationUnit(file);
+			AST_Visitor visitor = new AST_Visitor();
+			try {
+				cu.accept(visitor);
+			} catch (IllegalArgumentException ex) {
+				ex.printStackTrace();
+			}
+		}
+
+		AST_Parser.extractContextInformation();
+		System.out.println("meta-data extraction is done");
+
+		try{
+			Graph_Controller.createGraph();
+		} catch(IOException e) {
+			e.printStackTrace();
+			logger.warning("Graph Construction failed");
+		}
+		System.out.println("Graph Construction and permission inference is done");
+
+
+		// getAnnotationsCompilationUnit
+//		long end = System.nanoTime();
+//		long elapsedTime = end - startTime;
+//		double seconds = (double)elapsedTime / 1000000000.0;
+//		System.out.println("Seconds Time = "+seconds);
+		////////////////////////////////////////////////
+
+		/// permissions have been already generated
+//		IJavaElement javaElement = UserSelectedClasses_Analysis.getPulseCompilationUnit();
+//		System.out.println("Pulse processing starts here");
+//		final int testType = 0;
+//		List<ICompilationUnit> temp = Workspace_Utilities.collectCompilationUnits(javaElement);
+//		if(temp != null) {
+//			final List<ICompilationUnit> compUnits = temp;
+//			UserSelectedClassesAnalysis UAnalysis = new UserSelectedClassesAnalysis();
+//			UAnalysis.analyzeFromPlugin(compUnits, testType);
+//		}
+//
+//		try {
+//			testType=test;
+//			EVMDD_SMC_Generator.reset();
+//			Boolean JML;
+//			for (ICompilationUnit cunit : compilationUnitList) {
+//				JML=false;
+//				String prog=getInputStream(cunit);
+//				CompilationUnit cu = null;
+//				if (prog.contains("//@") == true){
+//					JML = true;
+//					JMLAnnotatedJavaClass JClass = new JMLAnnotatedJavaClass();
+//					prog = JClass.translateJMLAnnotationsToPlural(prog);
+//					cu = getCompilationUnit(prog);
+//				}
+//				else{
+//					cu = getCompilationUnit(cunit);
+//				}
+//
+//				SMC_Visitor visitor = new SMC_Visitor();
+//				cu.accept(visitor);
+//				if (JML==true){
+//					prog=EVMDD_SMC_Generator.modifyConstructorSpecifications(prog);
+//					String className=EVMDD_SMC_Generator.getPkgObject().getClasses().getLast().getName();
+//					E_GeneratedPluralSpecification.createFromPlugin(prog,className);
+//				}
+//			}
+//			E_SMC_Model.generateSMCmodel_Plugin(EVMDD_SMC_Generator.getPkgObject(),test);
+//			starttime = getTime();
+//			//uncomment later
+//			//callModelCheckerThroughPlugin();
+//			//uncomment later
+//			callModelCheckerThroughCommandLine();
+//		}
+//
+//
+//		catch (Exception e) {e.printStackTrace();}
+
+
+
+		System.out.println("Third stage is done");
+
+
+		//MyClassLoader.getAnnotatedCompilationUnits();
+
 		//inputFiles= new LinkedList<String>();
-
 		//inputFiles.add(testRead("D:\\PhD-Folder-August-2012\\PulseWebSite\\target.java"));
-
 		//UserSelectedClassesAnalysis.analyzeFromCommandLine(inputFiles, "0","2");
-
 		//if (num>=2){
 		//seprateJavaFile(args[0]);
 		//UserSelectedClassesAnalysis.analyzeFromCommandLine(inputFiles, args[1],args[2]);
 		//}
-
 		/*Graph_Construction obj = new Graph_Construction();
-
 		 obj.createGraph();*/
-
-
 		//Sip4JIFileAction.run();
-
 	}
+
+
+
+
+
+
 	private static void seprateJavaFile(String str) {
 		boolean flag=false;
 		do {
@@ -106,5 +193,7 @@ public class Main  {
 
 	}
 
-
+	public static String getPath(){
+		return "/Users/liebes/project/laboratory/Sip4J/tmp";
+	}
 }

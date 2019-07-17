@@ -1,20 +1,18 @@
 package datastructure;
 
-import java.util.LinkedList;
-
 public class E_Field {
 
 	private String name;
 	private String type;
 	private int modifier;
-	
+
 	private int objectIndex;
 	private int classIndex;
-	
+
 	public E_Field() {
 		classIndex = -1;
 	}
-	
+
 	public void setName(String str) {
 		name = str;
 	}

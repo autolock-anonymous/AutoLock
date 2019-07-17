@@ -18,7 +18,6 @@
  * along with Crystal.  If not, see <http://www.gnu.org/licenses/>.
  */
 package parser;
-
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,7 +29,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceRoot;
@@ -46,30 +44,26 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
-
 /**
  * A collection of methods used to extract useful data from the workspace. These
  * methods are used by the framework and should not be used by users of the
  * framework.
- * 
+ *
  * You can access must of the data collected from these methods via the Crystal
  * class.
- * 
+ *
  * @author David Dickey
- * 
+ *
  */
 public class Workspace_Utilities {
-
 	private static final Logger log = Logger
 			.getLogger(Workspace_Utilities.class.getName());
-
 	/**
 	 * Traverses the workspace for CompilationUnits.
-	 * 
+	 *
 	 * @return the list of all CompilationUnits in the workspace or
 	 *         <code>null</code> if no comp units were found.
 	 */
-
 	public static List<ICompilationUnit> scanForCompilationUnits() {
 		IWorkspace workspace = ResourcesPlugin.getWorkspace();
 		if (workspace == null) {
@@ -86,56 +80,43 @@ public class Workspace_Utilities {
 			log.warning("No Java Model in workspace");
 			return null;
 		}
-
 		// Get all CompilationUnits
 		return collectCompilationUnits(javaModel);
 	}
-	
 	/**
 	 * A recursive traversal of the IJavaModel starting from the given element
 	 * to collect all ICompilationUnits. Each compilation unit corresponds to
 	 * each java file.
-	 * 
+	 *
 	 * @param javaElement
 	 *            a node in the IJavaModel that will be traversed
 	 * @return a list of compilation units or <code>null</code> if no comp units
 	 *         are found
 	 */
 	public static List<ICompilationUnit> collectCompilationUnits(IJavaElement javaElement) {
-		
 		List<ICompilationUnit> list = null, temp = null;
-	
 		//System.out.println(IJavaElement.JAVA_PROJECT);
-		
 		/*if (javaElement.getElementType() == IJavaElement.PACKAGE_FRAGMENT) {
-			
 			//System.out.println(""+javaElement.getElementName());
-	        
 			IPackageFragment packagefrg = (IPackageFragment) javaElement;
 			//String name, String contents,boolean force, IProgressMonitor monitor) throws		JavaModelException{
-				
 				 String input = "public class Box() { }";
-				
 				try {
 					ICompilationUnit output  = packagefrg.createCompilationUnit("pulseTest2.java", input, true, null);
-								
 				} catch (JavaModelException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-			
 		}*/
-		// We are traversing the JavaModel for COMPILATION_UNITs	
+		// We are traversing the JavaModel for COMPILATION_UNITs
 		if (javaElement.getElementType() == IJavaElement.COMPILATION_UNIT) {
-			list = new ArrayList<ICompilationUnit>();
+			list = new ArrayList<>();
 			list.add((ICompilationUnit) javaElement);
 			return list;
 		}
-
 		// Non COMPILATION_UNITs will have to be further traversed
 		if (javaElement instanceof IParent) {
 			IParent parent = (IParent) javaElement;
-
 			// Do not traverse PACKAGE_FRAGMENT_ROOTs that are ReadOnly
 			// this ignores libraries and .class files
 			if (javaElement.getElementType() == IJavaElement.PACKAGE_FRAGMENT_ROOT
@@ -163,14 +144,12 @@ public class Workspace_Utilities {
 			log.warning("Encountered a model element that's not a comp unit or parent: "
 					+ javaElement);
 		}
-
 		return list;
 	}
-
 	/**
 	 * Goes through a list of compilation units and parses them. The act of
 	 * parsing creates the AST structures from the source code.
-	 * 
+	 *
 	 * @param compilationUnits
 	 *            the list of compilation units to parse
 	 * @return the mapping from compilation unit to the AST roots of each
@@ -180,7 +159,6 @@ public class Workspace_Utilities {
 			List<ICompilationUnit> compilationUnits) throws Exception {
 		if (compilationUnits == null)
 			throw new Exception("null list of compilation units");
-
 		Map<ICompilationUnit, ASTNode> parsedCompilationUnits = new HashMap<ICompilationUnit, ASTNode>();
 		Iterator<ICompilationUnit> iter = compilationUnits.iterator();
 		ICompilationUnit compUnit = null;
@@ -196,12 +174,11 @@ public class Workspace_Utilities {
 		}
 		return parsedCompilationUnits;
 	}
-
 	/**
 	 * Collects all top level methods from CompilationUnits.
-	 * 
+	 *
 	 * (Embedded Methods are currently not collected.)
-	 * 
+	 *
 	 * @param compilationUnitToASTNode
 	 *            the mapping of CompilationUnits to preparsed ASTNodes
 	 * @return the list of all top level methods within the CompilationUnits
@@ -209,10 +186,9 @@ public class Workspace_Utilities {
 	 */
 	public static List<MethodDeclaration> scanForMethodDeclarations(
 			Map<ICompilationUnit, ASTNode> compilationUnitToASTNode)
-					throws Exception {
+			throws Exception {
 		if (compilationUnitToASTNode == null)
 			throw new Exception("null map of compilation units to ASTNodes");
-
 		// Create an empty list
 		List<MethodDeclaration> methodList = new LinkedList<MethodDeclaration>();
 		List<MethodDeclaration> tempMethodList;
@@ -228,10 +204,9 @@ public class Workspace_Utilities {
 		}
 		return methodList;
 	}
-
 	/**
 	 * Collects all top level methods from an AST including embedded methods.
-	 * 
+	 *
 	 * @param node
 	 *            the root of an AST
 	 * @return all top level methods within the AST
@@ -241,38 +216,31 @@ public class Workspace_Utilities {
 			ASTNode node) throws Exception {
 		if (node == null)
 			throw new Exception("AST tree not found from ICompilationUnit");
-
 		// Visitor Class
 		class MethodFindVisitor extends ASTVisitor {
 			List<MethodDeclaration> methodList;
-
 			public MethodFindVisitor(List<MethodDeclaration> inMethodList) {
 				methodList = inMethodList;
 			}
-
 			// Visit MethodDeclarations
 			public boolean visit(MethodDeclaration methodDeclaration) {
 				methodList.add(methodDeclaration);
-
 				// false returns us back, instead of traversing further down
 				return true;
 			}
 		}
-
 		// Create an empty list, populate methods by traversing using the
 		// visitor
 		List<MethodDeclaration> methodList = new LinkedList<MethodDeclaration>();
 		MethodFindVisitor visitor = new MethodFindVisitor(methodList);
 		node.accept(visitor);
 		return methodList;
-
 	}
-
 	/**
 	 * Returns the list of compilation units for a given list of file names. All
 	 * compilation units that <i>contain</i> one of the given strings are
 	 * returned.
-	 * 
+	 *
 	 * @param files
 	 *            List of file names to search for. They will be compared to the
 	 *            result of {@link #getWorkspaceRelativeName(IJavaElement)}.
@@ -281,7 +249,6 @@ public class Workspace_Utilities {
 	public static List<ICompilationUnit> findCompilationUnits(List<String> files) {
 		List<ICompilationUnit> allCompUnits = Workspace_Utilities
 				.scanForCompilationUnits();
-
 		int foundCount = 0;
 		ICompilationUnit[] resultArray = new ICompilationUnit[files.size()];
 		for (ICompilationUnit compUnit : allCompUnits) {
@@ -293,7 +260,6 @@ public class Workspace_Utilities {
 				}
 			}
 		}
-
 		List<ICompilationUnit> result;
 		if (foundCount == files.size())
 			result = Arrays.asList(resultArray);
@@ -306,11 +272,10 @@ public class Workspace_Utilities {
 		}
 		return result;
 	}
-
 	/**
 	 * Walks up the Java model hierarchy and separates the names of encountered
 	 * elements by forward slashes
-	 * 
+	 *
 	 * @param element
 	 * @return Symbolic name of the given Java element relative to the workspace
 	 *         root
@@ -323,10 +288,9 @@ public class Workspace_Utilities {
 		}
 		return result;
 	}
-
 	/**
 	 * Gets the root ASTNode for a compilation unit, with bindings on.
-	 * 
+	 *
 	 * @param compUnit
 	 * @return the root ASTNode for a compilation unit, with bindings on.
 	 */
@@ -350,20 +314,15 @@ public class Workspace_Utilities {
 		 */null);
 	}
 	public static IProject[]  getWorkspaceProjects(){ // added by ayesha for pulse
-
-	IWorkspace workspace = ResourcesPlugin.getWorkspace(); 
-		
-	IWorkspaceRoot root = workspace.getRoot();
-	
+		IWorkspace workspace = ResourcesPlugin.getWorkspace();
+		IWorkspaceRoot root = workspace.getRoot();
 		// Get all projects in the workspace
 		if (root == null) {
 			System.out.println(""+root.getName().toString());
 			System.out.println("No workspace root");
 			return null;
 		}
-
 		IProject[] projects = root.getProjects();
-		
 		return projects;
 	}
 }
