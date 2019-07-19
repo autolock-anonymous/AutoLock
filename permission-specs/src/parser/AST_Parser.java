@@ -109,9 +109,9 @@ public class AST_Parser {
 				/// System.out.println("constructor binding = "+f.resolveConstructorBinding()+" type binding"+f.resolveTypeBinding());
 				if (f.resolveConstructorBinding() != null) {
 					binding = f.resolveConstructorBinding();
-				}
-				if(binding.getDeclaringClass().isParameterizedType()){
-					binding = binding.getMethodDeclaration();
+					if(binding.getDeclaringClass().isParameterizedType()){
+						binding = binding.getMethodDeclaration();
+					}
 				}
 			}
 			else if (exp.getNodeType() == ASTNode.METHOD_INVOCATION) {
@@ -152,6 +152,7 @@ public class AST_Parser {
 		return operation;
 	}
 	public static void addMLocalVariables(E_Method _method, VariableDeclarationStatement node){
+		@SuppressWarnings("unchecked")
 		List<VariableDeclarationFragment> varList = node.fragments();
 		if (varList != null){
 			for (VariableDeclarationFragment  vars: varList) {
@@ -171,14 +172,10 @@ public class AST_Parser {
 		}
 	}
 	public static boolean ifReferenceType(ITypeBinding bind){
-		boolean flag = false;
 		if(bind.isFromSource() || (bind.isArray())){
-			flag = true;
+			return true;
 		}
-		else{
-			flag = false;
-		}
-		return flag;
+		return false;
 	}
 	public static void addClassFields(E_Class _class, FieldDeclaration[] fields, E_Method method){
 		if (fields != null) {
@@ -444,7 +441,7 @@ public class AST_Parser {
 		}
 	}
 	public static void addConstParameters(E_Method _method, MethodDeclaration node, List<SingleVariableDeclaration> _listParameters, List<ClassInstanceCreation> thisConstInv){
-		//List<ClassInstanceCreation> thisMethInv = getConstructorInvokation(node);
+		//List<ClassInstanceCreation> thisMethInv = getConstructorInvocation(node);
 		List<E_InvokedMethod> inv = findThisMethodInvoData(node);
 		//fetch argument list
 		if (_listParameters != null) {
@@ -2397,7 +2394,9 @@ else{
 		return field;
 	}
 	public static void addClassField(E_Method _method, String fName,
-									 String fType, String declarClass, String op, int eType, boolean retExp,E_Object obj,boolean isF,boolean isP){
+									 String fType, String declarClass,
+									 String op, int eType, boolean retExp,
+									 E_Object obj,boolean isF,boolean isP){
 		LinkedList<E_MRefField> refList = _method.getRefVariable();
 		/*E_Object qualObj = null;
 		if(_method!=null){
@@ -2412,7 +2411,7 @@ else{
 		if (refList != null) {
 			// Checking if the same referenced variable already present in the referenced variable list
 			if(fName!=null && fType!=null && declarClass!=null){
-				if (ifRefExists(refList, fName, fType, declarClass, op, eType,retExp,obj) == false) {
+				if (! ifRefExists(refList, fName, fType, declarClass, op, eType,retExp,obj)) {
 					// adding referenced variable in the referenced variable
 					// list
 				/*if(_method.getName().equalsIgnoreCase("main") && op.equalsIgnoreCase("r")){
@@ -2429,7 +2428,7 @@ else{
 	public static E_Object getQualifyingObject(MethodDeclaration mDecl){
 		E_Object obj = new E_Object();
 		if(mDecl!=null){
-			if(mDecl.getName().toString().equals("main") == false){
+			if(! mDecl.getName().toString().equals("main")){
 				E_Method _method = Data_Controller.searchMethod(mDecl);
 				if(_method != null){
 					if(_method.getQualifyingObject()!=null){
@@ -2440,7 +2439,7 @@ else{
 				else{
 					//if(mDecl.getName().equals("main")== false){
 					List<MethodInvocation> thi_Minv = AST_Parser.getThisMethodInvokation(mDecl);
-					if(thi_Minv!=null && thi_Minv.isEmpty() == false){
+					if(thi_Minv!=null && !thi_Minv.isEmpty()){
 						for(MethodInvocation thi_inv:thi_Minv){
 							IVariableBinding qualBind = null;
 							if(thi_inv.getExpression()!= null){
@@ -2485,7 +2484,7 @@ else{
 						}
 					}
 				    /* else{
-					 List<ClassInstanceCreation> thisConstInv = getConstructorInvokation(mDecl);
+					 List<ClassInstanceCreation> thisConstInv = getConstructorInvocation(mDecl);
 					 if(thisConstInv!=null && thi_Minv.isEmpty() == false){
 						 for(ClassInstanceCreation thi_cinv:thisConstInv){
 							 //MethodDeclaration pDecl = fetchParentMethodDecl(thi_cinv);
@@ -5117,7 +5116,7 @@ else{
 		}
 		return tempp;
 	}
-	public static List<ClassInstanceCreation> getConstructorInvokation(final MethodDeclaration snode){
+	public static List<ClassInstanceCreation> getConstructorInvocation(final MethodDeclaration snode){
 		List<ClassInstanceCreation> invokedMethod = new LinkedList<>();
 		List<ClassInstanceCreation> tempp = new LinkedList<>();
 		IMethodBinding binding = (IMethodBinding) snode.getName().resolveBinding();
@@ -5129,10 +5128,8 @@ else{
 			List<File> files = FileUtil.getFiles(root, new String[]{"java"});
 			for(File file : files){
 				CompilationUnit cu = ASTUtil.getCompilationUnit(file);
-				invokedMethod = getThisConsCall(cu,binding,invokedMethod);
-				for(ClassInstanceCreation inv:invokedMethod){
-					tempp.add(inv);
-				}
+				invokedMethod = getThisConsCall(cu, binding, invokedMethod);
+				tempp.addAll(invokedMethod);
 			}
 			return tempp;
 		}
@@ -5304,7 +5301,7 @@ else{
 					}
 				}
 				return super.visit(node);
-			};
+			}
 		});
 		if (invokedMethods != null) {
 			// methodCall = methodInvocation[0];
@@ -5464,15 +5461,12 @@ else{
 		}
 	}
 	public static boolean ifUserDefinedMethod(IMethodBinding mb){
-		boolean flag = false;
 		if (mb.getDeclaringClass() != null){
 			if(mb.getDeclaringClass().getTypeDeclaration().isFromSource()){
-				flag = true;
+				return true;
 			}
-			else
-				flag = false;
 		}
-		return flag;
+		return false;
 	}
 	public static void addMethodData(MethodDeclaration node, E_Object obj){
 		//if(node.getName().toString().equals("getResultVariable")){
@@ -5509,7 +5503,7 @@ else{
 				AST_Parser.addMethodParameters(_method, node, _listParameters,thisMethInv);
 			}
 			else{
-				List<ClassInstanceCreation> thisConstInv = getConstructorInvokation(node);
+				List<ClassInstanceCreation> thisConstInv = getConstructorInvocation(node);
 				if(thisConstInv!=null){
 					AST_Parser.addConstParameters(_method, node, _listParameters, thisConstInv);
 				}

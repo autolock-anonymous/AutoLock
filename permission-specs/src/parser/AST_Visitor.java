@@ -158,7 +158,7 @@ public class AST_Visitor extends ASTVisitor {
 										|| l_child.getNodeType() == ASTNode.QUALIFIED_NAME
 										||l_child.getNodeType() == ASTNode.ARRAY_ACCESS) {
 									Expression childExp = (Expression) l_child;
-									AST_Parser.addAssignmentExpression(childExp,raExp,method);
+									AST_Parser.addAssignmentExpression(childExp, raExp, method);
 								}
 							}
 						}
