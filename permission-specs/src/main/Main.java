@@ -1,5 +1,6 @@
 package main;
 
+import datautilities.Data_Controller;
 import datautilities.Data_Generator;
 import graphutilities.Graph_Controller;
 import org.eclipse.jdt.core.dom.AST;
@@ -7,9 +8,12 @@ import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import parser.AST_Parser;
 import parser.AST_Visitor;
+import top.liebes.controller.JFileController;
+import top.liebes.entity.JFile;
 import top.liebes.env.Env;
 import top.liebes.util.ASTUtil;
 import top.liebes.util.FileUtil;
+import top.liebes.util.GraphUtil;
 
 import java.io.*;
 import java.util.*;
@@ -22,38 +26,12 @@ public class Main  {
 	private static final Logger logger = Logger.getLogger(Main.class.getName());
 
 	public static void main(String[] args) {
-		int num = args.length;
-
-		String folder = Env.SOURCE_FOLDER;
-		File root = new File(folder);
-		List<File> files = FileUtil.getFiles(root, new String[]{"java"});
-		List<CompilationUnit> cuList = new ArrayList<>();
-
-		Data_Generator.createNewPackage();
-
-		// Read java files from folder
-		for(File file : files){
-			final CompilationUnit cu = ASTUtil.getCompilationUnit(file);
-			AST_Visitor visitor = new AST_Visitor();
-			try {
-				cu.accept(visitor);
-			} catch (IllegalArgumentException ex) {
-				ex.printStackTrace();
-			}
+		if(args.length == 1){
+			Env.SOURCE_FOLDER = args[0];
 		}
-
-		AST_Parser.extractContextInformation();
-		System.out.println("meta-data extraction is done");
-
-		try{
-			Graph_Controller.createGraph();
-		} catch(IOException e) {
-			e.printStackTrace();
-			logger.warning("Graph Construction failed");
-		}
-		System.out.println("Graph Construction and permission inference is done");
-
-
+		System.out.println("start to handle folder : " + Env.SOURCE_FOLDER);
+//		String src = "/Users/liebes/project/laboratory/Sip4J/runtime-sip4j-application/benchmarks/src/";
+		doThat(Env.SOURCE_FOLDER);
 		// getAnnotationsCompilationUnit
 //		long end = System.nanoTime();
 //		long elapsedTime = end - startTime;
@@ -111,7 +89,7 @@ public class Main  {
 
 
 
-		System.out.println("Third stage is done");
+//		System.out.println("Third stage is done");
 
 
 		//MyClassLoader.getAnnotatedCompilationUnits();
@@ -194,6 +172,62 @@ public class Main  {
 	}
 
 	public static String getPath(){
+
+
 		return "/Users/liebes/project/laboratory/Sip4J/tmp";
+	}
+
+	public static void doThat(String folder){
+		long startTime = System.currentTimeMillis();
+		File root = new File(folder);
+		List<File> files = FileUtil.getFiles(root, new String[]{"java"});
+
+		Data_Generator.createNewPackage();
+
+		// Read java files from folder
+		for(File file : files){
+			JFileController.put(file);
+			final CompilationUnit cu = ASTUtil.getCompilationUnit(file);
+			AST_Visitor visitor = new AST_Visitor(file.getName());
+			try {
+				cu.accept(visitor);
+			} catch (IllegalArgumentException ex) {
+				ex.printStackTrace();
+			}
+		}
+
+		AST_Parser.extractContextInformation();
+		System.out.println("meta-data extraction is done");
+
+		try{
+			Graph_Controller.createGraph();
+		} catch(IOException e) {
+			e.printStackTrace();
+			logger.warning("Graph Construction failed");
+		}
+		System.out.println("Graph Construction and permission inference is done");
+		System.out.println("sip4j get information cost : " + (System.currentTimeMillis() - startTime));
+		startTime = System.currentTimeMillis();
+		GraphUtil.test();
+		System.out.println("further add lock information cost : " + (System.currentTimeMillis() - startTime));
+	}
+
+	public static List<File> getFolders(File root){
+		List<File> res = new ArrayList<>();
+		if(!root.exists() || ! root.isDirectory()){
+			return res;
+		}
+		File[] files = root.listFiles();
+		boolean flag = true;
+		for(int i = 0; i < files.length; i ++){
+			if(files[i].isDirectory()){
+				res.addAll(getFolders(files[i]));
+				flag = false;
+			}
+		}
+		if(flag){
+			res.add(root);
+		}
+		return res;
 	}
 }

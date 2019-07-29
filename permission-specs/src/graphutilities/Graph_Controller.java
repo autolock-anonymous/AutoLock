@@ -11,6 +11,7 @@ import graphstructure.E_MethodGraph;
 import graphstructure.E_PackGraphs;
 import org.jgrapht.DirectedGraph;
 import parser.Parser_Utilities;
+import top.liebes.controller.JFileController;
 
 import java.io.File;
 import java.io.IOException;
@@ -73,6 +74,10 @@ public class Graph_Controller {
 			Graph_Construction.constructGraph(_class, _methds);
 			///	LinkedList<String> sipOutput = Graph_Utilities.generatePulsePermissions(classCounter);
 			LinkedList<String> sipOutput = Graph_Utilities.generateObjectPermissions(classCounter,methodcount);
+
+			// collect information for next work , by liebes
+			JFileController.collectInfo();
+
 			Parser_Utilities.writePulseSpecifications(file, sipOutput);
 			/// File anno_file = Parser_Utilities.createAnnotationFile();
 			/// LinkedList<String> annotOutput = Graph_Utilities.generateObjectAnnotations(classCounter,methodcount);

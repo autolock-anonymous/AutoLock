@@ -252,7 +252,7 @@ public class Graph_Utilities {
 		//int classCounter = 0;
 		//int methodcount = 0;
 		for (E_ClassGraphs c : _class) {
-			System.out.println("class = "+c.getClassSignatures());
+//			System.out.println("class = "+c.getClassSignatures());
 			String className = c.getClassSignatures();
 			if(className.equals(" ") ||className.equals(null) || className.equals("")){
 				className = "Anonymous";
@@ -263,19 +263,19 @@ public class Graph_Utilities {
 			else{
 				classContracts += classStatesHeader+ "\n\n" + className+ "\n";
 			}
-			System.out.println("@ClassStates({@State(name = alive)})");
-			System.out.println();
-			System.out.println(className);
+//			System.out.println("@ClassStates({@State(name = alive)})");
+//			System.out.println();
+//			System.out.println(className);
 			String constrContract = "@Perm(ensures=" + "\""
 					+ "unique(this) in alive" + "\"" + ")";
 			classContracts += constrContract + "\n";
-			System.out.println("@Perm(ensures=" + "\""
-					+ "unique(this) in alive" + "\"" + ")");
-			System.out.println();
-			System.out.println(c.getClassGraphName() + "() {   }");
+//			System.out.println("@Perm(ensures=" + "\""
+//					+ "unique(this) in alive" + "\"" + ")");
+//			System.out.println();
+//			System.out.println(c.getClassGraphName() + "() {   }");
 			String const_method = c.getClassGraphName() + "() {   }";
 			classContracts += const_method + "\n\n";
-			System.out.println();
+//			System.out.println();
 			LinkedList<E_MethodGraph> mgraphs = c.getMethodgraphs();
 			String methodcontracts = "";
 			for (E_MethodGraph graph : mgraphs) {
@@ -298,10 +298,13 @@ public class Graph_Utilities {
 						String prePerm ="";
 						String mainasteric=" * ";
 						String postPerm ="";
+
 						preMax =  generateObjectPrePermission(vertexes);
 						prePerm = setObjectPermission(preMax);
+
 						postMax = generateObjectPostPermissions(vertexes);
 						postPerm = setObjectPermission(postMax);
+
 						// added to generate empty pre permisssion on constructors
 						if(graph.getMgraphName().equals(c.getClassGraphName())){
 							prePerm = "";
@@ -316,9 +319,10 @@ public class Graph_Utilities {
 						}
 						String preParam = "";
 						String postParam = "";
-						String paramPre="";
-						String paramPost="";
-						String asterick = "";
+						String paramPre = "";
+						String paramPost = "";
+						String asterick  = "";
+
 						int allowed = countMParameters(graph);
 						Iterator<E_MVertice> it = vertexes.iterator();
 						if (it != null) {
@@ -408,11 +412,11 @@ public class Graph_Utilities {
 							+ prePermissionSet + " in Alive" + "\""
 							+ ", \n ensures= " + "\"" + postPermissionSet
 							+ " in Alive" + "\"" + ")";*/
-							System.out.println("" + pattern);
-							System.out.println();
-							System.out.println(graph.getMethodSignatures() + "{ }");
+//							System.out.println("" + pattern);
+//							System.out.println();
+//							System.out.println(graph.getMethodSignatures() + "{ }");
 							returnStatement += Parser_Utilities.createReturnStatement(graph.getMRetType());
-							System.out.println();
+//							System.out.println();
 							//if(!pattern.equals(" ")){
 							//methodcontracts += pattern + "\n" + graph.getMethodSignatures() + " {\n"+ Graph_Controller.getGraphBody(graph)+" \n} \n";
 							if(graph.getMgraphName().equals(c.getClassGraphName())){
@@ -427,13 +431,13 @@ public class Graph_Utilities {
 				// }
 				////}
 			}
-			System.out.println("}");
-			System.out.println("ENDOFCLASS");
+//			System.out.println("}");
+//			System.out.println("ENDOFCLASS");
 			String classend = "";
 			classend += "}" + "ENDOFCLASS\n\n";
 			classContracts += methodcontracts + "\n" + classend;
 			output.add(classContracts);
-			System.out.println("total methods"+methodcount);
+			System.out.println("total methods "+methodcount);
 		}
 		return output;
 	}
@@ -740,7 +744,7 @@ public class Graph_Utilities {
 			}
 		}
 		max = getMaxValue(temp);
-		System.out.println(max);
+//		System.out.println(max);
 		return max;
 	}
 	public static int generateObjectPostPermissions(LinkedList<E_MVertice> vertexes){

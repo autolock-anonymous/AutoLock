@@ -3,12 +3,14 @@ package graphstructure;
 import java.util.LinkedList;
 
 public class E_ClassGraphs {
-	
-	private static String className;
-	private static String ClassSignatures = "";
-	private static LinkedList<E_MethodGraph> methodgraphs;
-	
-	public E_ClassGraphs(){	
+
+
+	private String filename;
+	private  String className;
+	private  String classSignatures = "";
+	private  LinkedList<E_MethodGraph> methodgraphs;
+
+	public E_ClassGraphs(){
 		methodgraphs = new LinkedList<E_MethodGraph>();
 	}
 	public String getClassGraphName() {
@@ -27,10 +29,17 @@ public class E_ClassGraphs {
 		methodgraphs.set(methodgraphs.indexOf(graph), graph);
 	}
 	public String getClassSignatures() {
-		return ClassSignatures;
+		return classSignatures;
 	}
-	public static void setClassSignatures(String classSignatures) {
-		ClassSignatures = classSignatures;
+	public  void setClassSignatures(String classSignatures) {
+		classSignatures = classSignatures;
 	}
-	
+
+	public String getFilename() {
+		return filename;
+	}
+
+	public void setFilename(String filename) {
+		this.filename = filename;
+	}
 }

@@ -1,7 +1,12 @@
 package top.liebes.env;
 
+import org.eclipse.jdt.core.dom.AST;
+
+/**
+ * @author liebes
+ */
 public class Env {
-    public final static String SOURCE_FOLDER =
+    public static String SOURCE_FOLDER =
             "/Users/liebes/project/laboratory/Sip4J/runtime-sip4j-application/benchmarks/src/aeminium/fibonacci";
 //            "/Users/liebes/project/laboratory/Sip4J/runtime-sip4j-application/benchmarks/src/working_examples";
 
@@ -12,5 +17,9 @@ public class Env {
             "/Library/Java/JavaVirtualMachines/jdk1.8.0_192.jdk/Contents/Home/lib/tools.jar",
     };
 
+    public final static String TARGET_FOLDER =
+            "/Users/liebes/project/laboratory/Sip4J/permission-specs/output";
+
+    public final static Integer JAVA_VERSION = AST.JLS3;
 
 }

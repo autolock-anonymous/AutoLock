@@ -16,23 +16,20 @@ public class Data_Controller {
 		LinkedList<E_Class> eclass = fetchAllClasses();
 		for(E_Class _class : eclass){
 			if(_class!=null){
-				System.out.println("*******************************************************************************************");
-				System.out.println("class "+_class.getName());
+				System.out.println("***************************Start of class***************************************");
+				System.out.println("class "+ _class.getName());
 				//System.out.println("class Index "+E_Class.getLastClassIndex());
-				System.out.println("class Qualified Name "+_class.getClassQName());
+				System.out.println("class Qualified Name "+ _class.getClassQName());
 				if(_class.getSuperClass() !=null){
-					System.out.println("Parent clas "+_class.getSuperClass().getName());
+					System.out.println("Parent class "+_class.getSuperClass().getName());
 				}
-				System.out.println("**************************************");
-				System.out.println("Fields");
-				System.out.println("");
+				System.out.println("--------start of fields--------------");
 				showClassField(_class);
-				System.out.println("");
-				System.out.println("**************************************");
-				System.out.println("Methods");
-				System.out.println("");
+				System.out.println("----------end of fields---------------\n");
+				System.out.println("--------start of methods--------------");
 				showClassMethods(_class);
-				System.out.println("");
+				System.out.println("----------end of methods---------------\n");
+				System.out.println("***************************end of class***************************************");
 			}
 		}
 	}
@@ -40,7 +37,8 @@ public class Data_Controller {
 		LinkedList<E_Field> list =_class.getFields();
 		if(list!=null){
 			for (E_Field f:list){
-				System.out.println("Name="+f.getName().toString()+" Type="+f.getType().toString()+" Modifier="+f.getModifier()+" Class Index="+f.getClassIndex());		}
+				System.out.println("Name="+f.getName()+" Type="+f.getType()+" Modifier="+f.getModifier()+" Class Index="+f.getClassIndex());
+			}
 		}
 	}
 	@SuppressWarnings("null")
@@ -62,24 +60,21 @@ public class Data_Controller {
 			System.out.println("***************************************");
 		}*/
 		for (E_Method m:_methds){
-			System.out.println("*******************************************************************************************");
-			System.out.println("Method name = "+m.getName());
-			System.out.println("");
-			System.out.println("Declaring class = "+m.getDeclaringClass()+" Qualified Name of Class = "+m.getDeclClassQName());
-			if(m.getQualifyingObject()!=null){
-				System.out.println("Receiver object = "+m.getQualifyingObject().getName().toString());
+			System.out.println("------------------start of method " + m.getName() + " ----------------");
+			System.out.println("Method name = " + m.getName());
+			System.out.println("Declaring class = " + m.getDeclaringClass() + " Qualified Name of Class = " + m.getDeclClassQName());
+			if(m.getQualifyingObject() != null){
+				System.out.println("Receiver object = " + m.getQualifyingObject().getName());
 			}
-		/*if(m.getName().equals("main")){
-		}
-		else{*/
 			LinkedList<E_MRefParameter> _param = m.getRefparams();
-			if(_param!=null){
+			if(_param != null && _param.size() > 0){
 				for(E_MRefParameter p : _param){
+					System.out.println("------------------start of param " + p.getName() + " ----------------");
 					displayParamter(p);
-					System.out.println("************************************");
+					System.out.println("------------------end of param " + p.getName() + " ----------------");
 					LinkedList<E_MRefAlias> param_alias = Data_Controller.fetchAliasesOfParams(p);
-					LinkedList<E_MRefParameter> paramAliases = new LinkedList<E_MRefParameter>();
-					LinkedList<E_MRefField> fAliases = new LinkedList<E_MRefField>();
+					LinkedList<E_MRefParameter> paramAliases = new LinkedList<>();
+					LinkedList<E_MRefField> fAliases = new LinkedList<>();
 					System.out.println("Start of Parameter Aliase******************************************");
 					if(param_alias != null && !(param_alias.isEmpty())){
 						//fetchParametersAliases(param_alias,paramAliases);
@@ -92,14 +87,19 @@ public class Data_Controller {
 					}
 				}
 			}
-			System.out.println("Field of method continue = "+m.getIdentifier());
-			LinkedList<E_MRefField> _ref = null;
-			LinkedList<E_MRefAlias> aliases =  new LinkedList<E_MRefAlias>();
+			else{
+				System.out.println("----------- no parameters ------------");
+			}
+			System.out.println("Field of method continue = " + m.getIdentifier());
+			LinkedList<E_MRefField> _ref;
+			LinkedList<E_MRefAlias> aliases;
 			_ref = m.getRefVariable();
 			System.out.println("*********************************");
-			if(_ref != null){
+			if(_ref != null && _ref.size() > 0){
 				for(E_MRefField rf : _ref){
+					System.out.println("-------------- start of field " + rf.getName()+" -------------");
 					displayField(rf);
+					System.out.println("-------------- end of field "+ rf.getName() +" -------------");
 					System.out.println("************************************");
 					aliases = Data_Controller.fetchAliasesOfRefField((rf));
 					LinkedList<E_MRefField> fAliases = new LinkedList<E_MRefField>();
@@ -115,8 +115,8 @@ public class Data_Controller {
 						System.out.println("No Referenced Fields Aliase**************************");
 					}
 				}
-				//  }
 			}
+			System.out.println("------------------end of method " + m.getName() + " ----------------");
 		}
 	}
 	public static LinkedList<E_Class> fetchAllClasses(){

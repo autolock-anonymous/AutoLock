@@ -15,12 +15,14 @@ public class Graph_Construction{
 	private static JGraphModelAdapter<String, LabeledEdge> m_jgAdapter;
 	public static void constructGraph(E_Class _class, LinkedList<E_Method> _methds){
 		Graph_Generator.createNewPackage();
+
 		E_ClassGraphs cgraph = new E_ClassGraphs();
+		cgraph.setFilename(_class.getFilename());
 		E_MethodGraph _methodgraph = null;
 		if(_methds!=null){
 			cgraph.setClassGraphName(_class.getName());
 			//E_ClassGraphs.setClassSignatures(_class.getModifier()+" class "+_class.getName()+" {");
-			E_ClassGraphs.setClassSignatures("class "+_class.getName()+" {");
+			cgraph.setClassSignatures("class "+_class.getName()+" {");
 			for(E_Method m : _methds ){
 				_methodgraph = Graph_Construction.createMethodGraph(m);
 				cgraph.addMethodgraphs(_methodgraph);

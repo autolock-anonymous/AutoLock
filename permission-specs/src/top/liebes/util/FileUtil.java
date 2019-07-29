@@ -6,6 +6,11 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
 
+/**
+ * Util to operate on file
+ *
+ * @author liebes
+ */
 public class FileUtil {
     public static char[] getFileContents(File file) {
         // char array to store the file contents in
@@ -29,6 +34,12 @@ public class FileUtil {
         return contents;
     }
 
+    /**
+     * Get all files located in the folder provided with the specific suffix.
+     * @param folder target folder path, use absolute path
+     * @param suffix allowed suffix, files with illegal suffix will be ignored
+     * @return list of files
+     */
     public static List<File> getFiles(File folder, String[] suffix){
         List<File> res = new ArrayList<>();
         if(folder.isDirectory()){

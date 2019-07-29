@@ -6,6 +6,7 @@ import java.util.LinkedList;
 
 public class E_Class {
 
+	private String filename;
 	private String className;
 	private String modifier;
 	private String classQName =""; // qualifyng name
@@ -126,4 +127,11 @@ public class E_Class {
 		this.modifier = mod;
 	}
 
+	public String getFilename() {
+		return filename;
+	}
+
+	public void setFilename(String filename) {
+		this.filename = filename;
+	}
 }

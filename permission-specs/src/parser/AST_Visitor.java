@@ -10,9 +10,17 @@ import org.eclipse.jdt.core.dom.*;
 
 import java.util.List;
 public class AST_Visitor extends ASTVisitor {
+	private String filename;
+
 	public AST_Visitor() {
 		super();
 	}
+
+	public AST_Visitor(String filename){
+		super();
+		this.filename = filename;
+	}
+
 	@Override
 	public void preVisit(ASTNode node) {
 		super.preVisit(node);
@@ -43,6 +51,7 @@ public class AST_Visitor extends ASTVisitor {
 		E_Class _class = null;
 		if(node.resolveBinding() != null && ! node.isInterface()){
 			_class = AST_Parser.createNewClass(node.resolveBinding());
+			_class.setFilename(filename);
 			// add class to a package
 			//c
 			AST_Parser.addClassToPackage(Data_Generator.getPackage(), _class);
@@ -77,6 +86,10 @@ public class AST_Visitor extends ASTVisitor {
 	}
 	@Override
 	public boolean visit(MethodDeclaration node) {
+//		expression.
+//		statement.setExpression();
+
+
 		/// System.out.println("In method = "+node.getName().toString());
 		E_Object obj = new E_Object();
 		if(node.resolveBinding() != null && node.getBody() != null){
