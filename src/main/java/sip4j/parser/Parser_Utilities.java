@@ -16,17 +16,12 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
 
-import liebes.top.env.Env;
+import top.liebes.env.Env;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.IPackageFragment;
-import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.JavaModelException;
+
 /**
  * A collection of methods used to extract useful data from the parser.
  *

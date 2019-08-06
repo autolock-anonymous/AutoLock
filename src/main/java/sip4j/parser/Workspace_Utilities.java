@@ -166,7 +166,7 @@ public class Workspace_Utilities {
 		ASTNode node = null;
 		for (; iter.hasNext();) {
 			compUnit = iter.next();
-			parser = ASTParser.newParser(AST.JLS3);
+			parser = ASTParser.newParser(top.liebes.env.Env.JAVA_VERSION);
 			parser.setResolveBindings(true);
 			parser.setSource(compUnit);
 			node = parser.createAST(null);

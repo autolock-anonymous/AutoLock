@@ -1,4 +1,4 @@
-package liebes.top.entity;
+package top.liebes.entity;
 
 import sip4j.graphstructure.E_ClassGraphs;
 

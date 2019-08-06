@@ -14,9 +14,9 @@ import org.eclipse.jdt.core.dom.*;
 import sip4j.datastructure.*;
 import sip4j.datautilities.Data_Controller;
 import sip4j.datautilities.Data_Generator;
-import liebes.top.env.Env;
-import liebes.top.util.ASTUtil;
-import liebes.top.util.FileUtil;
+import top.liebes.env.Env;
+import top.liebes.util.ASTUtil;
+import top.liebes.util.FileUtil;
 
 public class AST_Parser {
 	public static  E_Class createNewClass(ITypeBinding node){
@@ -159,6 +159,9 @@ public class AST_Parser {
 				IVariableBinding leftBind  = vars.resolveBinding();
 				Expression rightExp = vars.getInitializer();
 				/// IVariableBinding rightExpB = AST_Parser.getBinding(rightExp);
+				if(rightExp == null || rightExp.resolveTypeBinding() == null){
+					continue;
+				}
 				if(rightExp != null && leftBind != null){
 					if(ifReferenceType(leftBind.getType())){
 						if(ifReferenceType(rightExp.resolveTypeBinding())){
@@ -558,7 +561,7 @@ public class AST_Parser {
 			if(invM!=null){
 				MethodDeclaration sourceDecl = AST_Parser.fetchParentMethodDecl(invM);
 				if(sourceDecl!=null){
-					if(sourceDecl.getName().toString().equals("liebes/top/main")){
+					if(sourceDecl.getName().toString().equals("top/liebes/main")){
 						obj = Data_Controller.searchMethod(getMethodDeclaration(invM.resolveConstructorBinding())).getQualifyingObject();
 					}
 					else{
@@ -974,7 +977,7 @@ public class AST_Parser {
 					MethodDeclaration md = (MethodDeclaration) child;
 					IMethodBinding tmb = md.resolveBinding();
 					if (AST_Parser.ifUserDefinedMethod(tmb)){
-						if(tmb!=null && tmb.getName().equals("liebes/top/main")){
+						if(tmb!=null && tmb.getName().equals("top/liebes/main")){
 							mainClass = node;
 							mainDecl = md;
 							break;
@@ -1782,6 +1785,9 @@ else{
 		E_MRefField pointeefield = null;
 		IVariableBinding leftExpB = AST_Parser.getVariableBinding(laExp);
 		IVariableBinding rightExpB = AST_Parser.getVariableBinding(raExp);
+		if(leftExpB == null || rightExpB == null){
+			System.out.println("???");
+		}
 		if(laExp.getNodeType() == ASTNode.FIELD_ACCESS){
 			//FieldAccess node = (FieldAccess) laExp;
 			//E_Object obj  = AST_Parser.getFieldAccessQualObj(node, _method);
@@ -2428,7 +2434,7 @@ else{
 	public static E_Object getQualifyingObject(MethodDeclaration mDecl){
 		E_Object obj = new E_Object();
 		if(mDecl!=null){
-			if(! mDecl.getName().toString().equals("liebes/top/main")){
+			if(! mDecl.getName().toString().equals("top/liebes/main")){
 				E_Method _method = Data_Controller.searchMethod(mDecl);
 				if(_method != null){
 					if(_method.getQualifyingObject()!=null){
@@ -2468,7 +2474,7 @@ else{
 										if(pDecl.getName().toString().equals(thi_inv.getName().toString())){
 											continue;
 										}
-										else if(pDecl.getName().toString().equals("liebes/top/main")){
+										else if(pDecl.getName().toString().equals("top/liebes/main")){
 											//E_Method mainM = Data_Controller.searchMethod(pDecl);
 											//if(mainM != null){
 											//obj.setName(mainM.getDeclClassQName());
@@ -4323,8 +4329,9 @@ else{
 		boolean flag = false;
 		if(bind.getDeclaringMethod() != null && bind.getDeclaringClass()== null){
 			if(bind.isField() == false && bind.isParameter() == false){
-				if(ifReferenceType(bind.getType()))
+				if(ifReferenceType(bind.getType())){
 					flag = true;
+				}
 			}
 		}
 		return flag;
@@ -4627,7 +4634,7 @@ else{
 						if(tmb!=null){
 							if (ifUserDefinedMethod(tmb)){
 								//System.out.println("Invoked Method = "+node.getName().toString());
-								if(tmb.getName().toString().equals("liebes/top/main")){
+								if(tmb.getName().toString().equals("top/liebes/main")){
 									decl[0] = mNode;
 									classNode[0] = node;
 									// System.out.println("main found ="+tmb.getName());
@@ -4953,7 +4960,7 @@ else{
 				//System.out.println("Java mdoel of class "+unit.getElementName()+" = "+unit.getJavaModel().getElementName().toString());
 			}
 			else{
-				ASTParser parser = ASTParser.newParser(AST.JLS3);
+				ASTParser parser = ASTParser.newParser(top.liebes.env.Env.JAVA_VERSION);
 				parser.setKind( ASTParser.K_COMPILATION_UNIT );
 				parser.setSource(cunit);
 				parser.setResolveBindings( true );
@@ -4994,7 +5001,7 @@ else{
 		if ( unit == null ) {
 			// not available, external declaration
 		}
-		ASTParser parser = ASTParser.newParser(AST.JLS3);
+		ASTParser parser = ASTParser.newParser(top.liebes.env.Env.JAVA_VERSION);
 		parser.setKind( ASTParser.K_COMPILATION_UNIT );
 		parser.setSource(unit);
 		parser.setResolveBindings( true );
@@ -5039,7 +5046,7 @@ else{
 			File root = new File(folder);
 			List<File> files = FileUtil.getFiles(root, new String[]{"java"});
 			for(File file : files){
-				CompilationUnit cu = ASTUtil.getCompilationUnit(file);
+				CompilationUnit cu = ASTUtil.getCompilationUnit(file, null);
 				tempInvokedMethods = getMethodCalls(cu, binding, tempInvokedMethods);
 				invokedMethods.addAll(tempInvokedMethods);
 			}
@@ -5077,7 +5084,7 @@ else{
 			File root = new File(folder);
 			List<File> files = FileUtil.getFiles(root, new String[]{"java"});
 			for(File file : files){
-				CompilationUnit cu = ASTUtil.getCompilationUnit(file);
+				CompilationUnit cu = ASTUtil.getCompilationUnit(file, null);
 				if(cu != null){
 					invokedMethod = getThisMethodCall(cu, binding, invokedMethod);
 					for(MethodInvocation inv: invokedMethod){
@@ -5127,7 +5134,7 @@ else{
 			File root = new File(folder);
 			List<File> files = FileUtil.getFiles(root, new String[]{"java"});
 			for(File file : files){
-				CompilationUnit cu = ASTUtil.getCompilationUnit(file);
+				CompilationUnit cu = ASTUtil.getCompilationUnit(file, null);
 				invokedMethod = getThisConsCall(cu, binding, invokedMethod);
 				tempp.addAll(invokedMethod);
 			}

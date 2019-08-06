@@ -1,12 +1,12 @@
-package liebes.top.util;
+package top.liebes.util;
 
-import liebes.top.ast.AddLockVisitor;
-import liebes.top.ast.AddPermissionVisitor;
-import liebes.top.ast.VarFindVisitor;
-import liebes.top.controller.JFileController;
-import liebes.top.entity.JFile;
-import liebes.top.entity.Pair;
-import liebes.top.env.Env;
+import top.liebes.ast.AddLockVisitor;
+import top.liebes.ast.AddPermissionVisitor;
+import top.liebes.ast.VarFindVisitor;
+import top.liebes.controller.JFileController;
+import top.liebes.entity.JFile;
+import top.liebes.entity.Pair;
+import top.liebes.env.Env;
 import sip4j.graphstructure.E_ClassGraphs;
 import sip4j.graphstructure.E_MVertice;
 import sip4j.graphstructure.E_MethodGraph;
@@ -45,7 +45,7 @@ public class GraphUtil {
                             continue;
                         }
                         String s = classGraph.getClassGraphName() + "."
-                                + methodGraph.getMgraphName() + "."
+                                + ASTUtil.getUniquelyIdentifiers(methodGraph) + "."
                                 + vertex.getVName();
                         permissionMap.put(s,
                                 Pair.make(vertex.getPre_permissions(), vertex.getPost_permissions()));
@@ -54,7 +54,7 @@ public class GraphUtil {
                         postPermissionList.add(vertex.getPost_permissions() + "(" + vertex.getVName() + ")");
                     }
                     permissionForMethodMap.put(
-                            classGraph.getClassGraphName() + "." + methodGraph.getMgraphName(),
+                            classGraph.getClassGraphName() + "." + ASTUtil.getUniquelyIdentifiers(methodGraph),
                             Pair.make(
                                     String.join(" * ", prePermissionList),
                                     String.join(" * ", postPermissionList)
@@ -62,18 +62,23 @@ public class GraphUtil {
                     );
                 }
             }
+            System.out.println("--------------------");
+            for(Map.Entry<String, Pair<String, String> > entry : permissionForMethodMap.entrySet()){
+                System.out.println(entry.getKey() + " " + entry.getValue().getV1() + " " + entry.getValue().getV2());
+            }
+            System.out.println("--------------------");
             // get permission information done
 
             // get compilation unit for each file
-            final CompilationUnit cu = ASTUtil.getCompilationUnit(file);
+            final CompilationUnit cu = ASTUtil.getCompilationUnit(file, null);
 
             // get all class member
-            VarFindVisitor visitor = new VarFindVisitor();
-            try {
-                cu.accept(visitor);
-            } catch (IllegalArgumentException ex) {
-                ex.printStackTrace();
-            }
+//            VarFindVisitor visitor = new VarFindVisitor();
+//            try {
+//                cu.accept(visitor);
+//            } catch (IllegalArgumentException ex) {
+//                ex.printStackTrace();
+//            }
 
             // store each class member appearance in each method
             AddLockVisitor lockVisitor = new AddLockVisitor();
@@ -93,12 +98,34 @@ public class GraphUtil {
 
             // add lock for each class member variable according to the map obtained above
             Set<String> lockDeclarationMarkSet = new HashSet<>();
-            for(String s : AddLockVisitor.fieldAccessMap.keySet()){
+            Map<String, Set<ASTNode>> sortMap = new TreeMap<>(new MapKeyComparator());
+            sortMap.putAll(AddLockVisitor.fieldAccessMap);
+
+            for(Map.Entry<String, Set<ASTNode>> entry : sortMap.entrySet()){
+                String s = entry.getKey();
+
                 // used to add lock in the smallest block
                 ASTNode firstStatement = null;
                 ASTNode lastStatement = null;
                 // <parent, <firstStatement, lastStatement>
-                Pair<ASTNode, Pair<ASTNode, ASTNode>> parentPair = getParent(AddLockVisitor.fieldAccessMap.get(s));
+                Pair<ASTNode, Pair<ASTNode, ASTNode>> parentPair = getParent(entry.getValue());
+                boolean isStatic = false;
+                boolean isFinal = false;
+                for(ASTNode astNode : entry.getValue()){
+                    if(astNode instanceof SimpleName){
+                        SimpleName simpleName = (SimpleName) astNode;
+                        IBinding binding = simpleName.resolveBinding();
+                        if(binding instanceof IVariableBinding){
+                            isStatic = Modifier.isStatic(binding.getModifiers());
+                            isFinal = Modifier.isFinal(binding.getModifiers());
+                            break;
+                        }
+                    }
+                }
+                // final field does not need lock
+                if(isFinal){
+                    continue;
+                }
 
                 String[] tmp = s.split("\\.");
                 // should be like className.methodName.varName
@@ -117,7 +144,7 @@ public class GraphUtil {
                 }
 
                 if(! lockDeclarationMarkSet.contains(className + "." + varName)){
-                    boolean flag = ASTUtil.addLockDeclaration(parentPair.getV1(), lockName);
+                    boolean flag = ASTUtil.addLockDeclaration(parentPair.getV1(), lockName, isStatic);
                     if(flag){
                         lockDeclarationMarkSet.add(className + "." + varName);
                     }
@@ -132,18 +159,18 @@ public class GraphUtil {
                 }
                 else if ("pure".equals(permissionPair.getV1() )){
                     // add read lock
-                    ASTUtil.surroundedByLock(parentPair, ASTUtil.READ_LOCK, varName, firstStatement, lastStatement);
+                    ASTUtil.surroundedByLock(parentPair, ASTUtil.READ_LOCK, varName);
                 }
                 else if ("share".equals(permissionPair.getV1() ) || "full".equals(permissionPair.getV1() )){
-                    ASTUtil.surroundedByLock(parentPair, ASTUtil.WRITE_LOCK, varName, firstStatement, lastStatement);
+                    ASTUtil.surroundedByLock(parentPair, ASTUtil.WRITE_LOCK, varName);
                     // add write lock
                 }
                 else if ("unique".equals(permissionPair.getV1() )){
-                    ASTUtil.surroundedByLock(parentPair, ASTUtil.READ_WRITE_LOCK, varName, firstStatement, lastStatement);
+                    ASTUtil.surroundedByLock(parentPair, ASTUtil.READ_WRITE_LOCK, varName);
                     // add sync block
                 }
             }
-            String folderName = VarFindVisitor.packageName.replace(".", "/");
+            String folderName = permissionVisitor.getPackageName().replace(".", "/");
             String targetFolderPath = Env.TARGET_FOLDER + "/" + folderName;
             File targetFolder = new File(targetFolderPath);
             if(! targetFolder.exists()){
@@ -165,6 +192,8 @@ public class GraphUtil {
                 System.err.println("write result to file error");
                 e.printStackTrace();
             }
+
+            PdfUtil.generatePdfFile(Env.TARGET_FOLDER + "/pdf/" + folderName + "/" + FileUtil.removeSuffix(file.getName()) + ".pdf", cu.toString());
         }
     }
 
@@ -188,9 +217,6 @@ public class GraphUtil {
             else{
                 boolean flag = false;
                 while(node.getParent() != null){
-                    if(node.getParent() instanceof MethodDeclaration){
-                        System.out.println("Woo");
-                    }
                     node = node.getParent();
                     if(node instanceof Statement && !(node instanceof Block)){
                         statementSet.add(node);
@@ -252,4 +278,12 @@ public class GraphUtil {
         AddLockVisitor.clear();
         VarFindVisitor.clear();
     }
+
+    static class MapKeyComparator implements Comparator<String>{
+        @Override
+        public int compare(String s1, String s2){
+            return s1.compareTo(s2);
+        }
+    }
 }
+

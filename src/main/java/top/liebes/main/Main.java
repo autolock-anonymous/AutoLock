@@ -1,22 +1,25 @@
-package liebes.top.main;
+package top.liebes.main;
 
 import sip4j.datautilities.Data_Generator;
 import sip4j.graphutilities.Graph_Controller;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import sip4j.parser.AST_Parser;
 import sip4j.parser.AST_Visitor;
-import liebes.top.controller.JFileController;
-import liebes.top.env.Env;
-import liebes.top.util.ASTUtil;
-import liebes.top.util.FileUtil;
-import liebes.top.util.GraphUtil;
+import top.liebes.controller.JFileController;
+import top.liebes.entity.Pair;
+import top.liebes.env.Env;
+import top.liebes.util.ASTUtil;
+import top.liebes.util.FileUtil;
+import top.liebes.util.GraphUtil;
 
 import java.io.*;
 import java.util.*;
 import java.util.logging.Logger;
 
+/**
+ * @author liebes
+ */
 public class Main  {
-
 	static LinkedList<String> inputFiles;
 
 	private static final Logger logger = Logger.getLogger(Main.class.getName());
@@ -26,7 +29,7 @@ public class Main  {
 			Env.SOURCE_FOLDER = args[0];
 		}
 		System.out.println("start to handle folder : " + Env.SOURCE_FOLDER);
-//		String src = "/Users/liebes/project/laboratory/Sip4J/runtime-sip4j-application/benchmarks/src/";
+//		String src = "/Users/liebes/project/laboratory/Sip4J/benchmarks/src/";
 		doThat(Env.SOURCE_FOLDER);
 		// getAnnotationsCompilationUnit
 //		long end = System.nanoTime();
@@ -176,21 +179,21 @@ public class Main  {
 	public static void doThat(String folder){
 		long startTime = System.currentTimeMillis();
 		File root = new File(folder);
-		List<File> files = FileUtil.getFiles(root, new String[]{"java"});
+		List<Pair<String, CompilationUnit>> cUnitList = ASTUtil.parseFiles(root);
 
 		Data_Generator.createNewPackage();
 
-		// Read java files from folder
-		for(File file : files){
-			JFileController.put(file);
-			final CompilationUnit cu = ASTUtil.getCompilationUnit(file);
-			AST_Visitor visitor = new AST_Visitor(file.getName());
-			try {
-				cu.accept(visitor);
-			} catch (IllegalArgumentException ex) {
-				ex.printStackTrace();
-			}
-		}
+		for(Pair<String, CompilationUnit> fileUnitPair : cUnitList){
+		    File file = new File(fileUnitPair.getV1());
+            JFileController.put(file);
+            final CompilationUnit cu = fileUnitPair.getV2();
+            AST_Visitor visitor = new AST_Visitor(file.getName());
+            try {
+                cu.accept(visitor);
+            } catch (IllegalArgumentException ex) {
+                ex.printStackTrace();
+            }
+        }
 
 		AST_Parser.extractContextInformation();
 		System.out.println("meta-data extraction is done");

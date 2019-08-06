@@ -1,0 +1,124 @@
+reading folder : benchmarks/src
+benchmarks/src/2
+reading folder : benchmarks/src/aeminium
+benchmarks/src/aeminium/2
+reading folder : benchmarks/src/aeminium/blackscholes
+1/benchmarks/src/aeminium/blackscholes
+benchmarks/src/aeminium/blackscholes
+leave folder :benchmarks/src/aeminium/blackscholes
+benchmarks/src/aeminium/2
+reading folder : benchmarks/src/aeminium/fft
+1/benchmarks/src/aeminium/fft
+benchmarks/src/aeminium/fft
+leave folder :benchmarks/src/aeminium/fft
+benchmarks/src/aeminium/2
+reading folder : benchmarks/src/aeminium/fibonacci
+1/benchmarks/src/aeminium/fibonacci
+benchmarks/src/aeminium/fibonacci
+leave folder :benchmarks/src/aeminium/fibonacci
+benchmarks/src/aeminium/2
+reading folder : benchmarks/src/aeminium/gaknapsack
+1/benchmarks/src/aeminium/gaknapsack
+benchmarks/src/aeminium/gaknapsack
+leave folder :benchmarks/src/aeminium/gaknapsack
+benchmarks/src/aeminium/2
+reading folder : benchmarks/src/aeminium/health
+1/benchmarks/src/aeminium/health
+benchmarks/src/aeminium/health
+leave folder :benchmarks/src/aeminium/health
+benchmarks/src/aeminium/2
+reading folder : benchmarks/src/aeminium/integral
+1/benchmarks/src/aeminium/integral
+benchmarks/src/aeminium/integral
+leave folder :benchmarks/src/aeminium/integral
+benchmarks/src/aeminium/2
+reading folder : benchmarks/src/aeminium/lud
+1/benchmarks/src/aeminium/lud
+benchmarks/src/aeminium/lud
+leave folder :benchmarks/src/aeminium/lud
+benchmarks/src/aeminium/2
+reading folder : benchmarks/src/aeminium/quicksort
+1/benchmarks/src/aeminium/quicksort
+benchmarks/src/aeminium/quicksort
+leave folder :benchmarks/src/aeminium/quicksort
+benchmarks/src/aeminium/2
+reading folder : benchmarks/src/aeminium/raytracer
+1/benchmarks/src/aeminium/raytracer
+benchmarks/src/aeminium/raytracer
+leave folder :benchmarks/src/aeminium/raytracer
+benchmarks/src/aeminium/2
+reading folder : benchmarks/src/aeminium/shellsort
+1/benchmarks/src/aeminium/shellsort
+benchmarks/src/aeminium/shellsort
+leave folder :benchmarks/src/aeminium/shellsort
+benchmarks/src/aeminium/2
+reading folder : benchmarks/src/aeminium/webserver
+1/benchmarks/src/aeminium/webserver
+benchmarks/src/aeminium/webserver
+leave folder :benchmarks/src/aeminium/webserver
+1/benchmarks/src/aeminium
+benchmarks/src/aeminium
+leave folder :benchmarks/src/aeminium
+benchmarks/src/2
+reading folder : benchmarks/src/jomp
+benchmarks/src/jomp/2
+reading folder : benchmarks/src/jomp/crypt
+1/benchmarks/src/jomp/crypt
+benchmarks/src/jomp/crypt
+leave folder :benchmarks/src/jomp/crypt
+benchmarks/src/jomp/2
+reading folder : benchmarks/src/jomp/euler
+1/benchmarks/src/jomp/euler
+benchmarks/src/jomp/euler
+leave folder :benchmarks/src/jomp/euler
+benchmarks/src/jomp/2
+reading folder : benchmarks/src/jomp/jgfutil
+1/benchmarks/src/jomp/jgfutil
+benchmarks/src/jomp/jgfutil
+leave folder :benchmarks/src/jomp/jgfutil
+benchmarks/src/jomp/2
+reading folder : benchmarks/src/jomp/lufact
+1/benchmarks/src/jomp/lufact
+benchmarks/src/jomp/lufact
+leave folder :benchmarks/src/jomp/lufact
+benchmarks/src/jomp/2
+reading folder : benchmarks/src/jomp/moldyn
+1/benchmarks/src/jomp/moldyn
+benchmarks/src/jomp/moldyn
+leave folder :benchmarks/src/jomp/moldyn
+benchmarks/src/jomp/2
+reading folder : benchmarks/src/jomp/montecarlo2
+1/benchmarks/src/jomp/montecarlo2
+benchmarks/src/jomp/montecarlo2
+leave folder :benchmarks/src/jomp/montecarlo2
+benchmarks/src/jomp/2
+reading folder : benchmarks/src/jomp/search
+1/benchmarks/src/jomp/search
+benchmarks/src/jomp/search
+leave folder :benchmarks/src/jomp/search
+benchmarks/src/jomp/2
+reading folder : benchmarks/src/jomp/series
+1/benchmarks/src/jomp/series
+benchmarks/src/jomp/series
+leave folder :benchmarks/src/jomp/series
+benchmarks/src/jomp/2
+reading folder : benchmarks/src/jomp/sor
+1/benchmarks/src/jomp/sor
+benchmarks/src/jomp/sor
+leave folder :benchmarks/src/jomp/sor
+benchmarks/src/jomp/2
+reading folder : benchmarks/src/jomp/sparsematmult
+1/benchmarks/src/jomp/sparsematmult
+benchmarks/src/jomp/sparsematmult
+leave folder :benchmarks/src/jomp/sparsematmult
+1/benchmarks/src/jomp
+benchmarks/src/jomp
+leave folder :benchmarks/src/jomp
+benchmarks/src/2
+reading folder : benchmarks/src/working_examples
+1/benchmarks/src/working_examples
+benchmarks/src/working_examples
+leave folder :benchmarks/src/working_examples
+1/benchmarks/src
+benchmarks/src
+leave folder :benchmarks/src

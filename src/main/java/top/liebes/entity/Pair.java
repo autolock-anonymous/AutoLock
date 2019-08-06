@@ -1,4 +1,4 @@
-package liebes.top.entity;
+package top.liebes.entity;
 
 import java.util.Objects;
 

@@ -11,7 +11,7 @@ import sip4j.graphstructure.E_MethodGraph;
 import sip4j.graphstructure.E_PackGraphs;
 import org.jgrapht.DirectedGraph;
 import sip4j.parser.Parser_Utilities;
-import liebes.top.controller.JFileController;
+import top.liebes.controller.JFileController;
 
 import java.io.File;
 import java.io.IOException;

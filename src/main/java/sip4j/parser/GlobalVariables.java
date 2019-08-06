@@ -4,7 +4,7 @@ public class GlobalVariables {
 	public static final String READ = "r";
 	public static final String WRITE = "rw";
 	public static final String ALIAS = "a";
-	public static final String MAIN = "liebes/top/main";
+	public static final String MAIN = "top/liebes/main";
 	public static final String ABSTRACT = "abstract";
 	public static final String PUBLIC = "public";
 	public static final String PRIVATE = "private";

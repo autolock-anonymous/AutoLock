@@ -1,4 +1,4 @@
-package liebes.top.ast;
+package top.liebes.ast;
 
 import org.eclipse.jdt.core.dom.*;
 

@@ -1,11 +1,11 @@
-package liebes.top.controller;
+package top.liebes.controller;
 
 import sip4j.graphstructure.E_ClassGraphs;
 import sip4j.graphstructure.E_MVertice;
 import sip4j.graphstructure.E_MethodGraph;
 import sip4j.graphstructure.E_PackGraphs;
 import sip4j.graphutilities.Graph_Generator;
-import liebes.top.entity.JFile;
+import top.liebes.entity.JFile;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -64,6 +64,9 @@ public class JFileController {
         E_PackGraphs pkg = Graph_Generator.getPackage();
         LinkedList<E_ClassGraphs> classGraphs = pkg.getClasses();
         for(E_ClassGraphs classGraph : classGraphs){
+            if(classGraph.getFilename() == null){
+                continue;
+            }
             JFileController.get(classGraph.getFilename()).getClassGraphs().add(classGraph);
         }
     }

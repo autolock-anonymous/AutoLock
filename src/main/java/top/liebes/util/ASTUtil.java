@@ -1,7 +1,11 @@
-package liebes.top.util;
+package top.liebes.util;
 
-import liebes.top.entity.Pair;
-import liebes.top.env.Env;
+import sip4j.datastructure.E_Method;
+import sip4j.graphstructure.E_MethodGraph;
+import sip4j.parser.AST_Parser;
+import top.liebes.ast.CompilationUnitASTRequestor;
+import top.liebes.entity.Pair;
+import top.liebes.env.Env;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.ToolFactory;
 import org.eclipse.jdt.core.dom.*;
@@ -11,6 +15,7 @@ import org.eclipse.jface.text.IDocument;
 import org.eclipse.text.edits.TextEdit;
 
 import java.io.File;
+import java.nio.charset.Charset;
 import java.util.*;
 
 /**
@@ -30,26 +35,61 @@ public class ASTUtil {
      * @param file
      * @return
      */
-    public static CompilationUnit getCompilationUnit(File file){
+    public static CompilationUnit getCompilationUnit(File file, ASTParser tParser){
         if(cpMap.containsKey(file.getAbsolutePath())){
             return cpMap.get(file.getAbsolutePath());
         }
+        ASTParser parser;
+        if(tParser == null){
+            parser = ASTParser.newParser(top.liebes.env.Env.JAVA_VERSION);
+            parser.setResolveBindings(true);
+            parser.setKind(ASTParser.K_COMPILATION_UNIT);
+            parser.setBindingsRecovery(true);
 
-        ASTParser parser = ASTParser.newParser(AST.JLS3);
+            parser.setUnitName(FileUtil.removeSuffix(file.getName()));
+
+            String[] sources = { Env.SOURCE_FOLDER };
+            String[] classpath = Env.CLASSPATH;
+
+            parser.setEnvironment(classpath, sources, new String[] { "UTF-8"}, true);
+
+        }
+        else{
+            parser = tParser;
+        }
+        parser.setSource(FileUtil.getFileContents(file));
+        CompilationUnit cu = (CompilationUnit) parser.createAST(null);
+//        parser.createASTs();
+        return cu;
+    }
+
+    public static List<Pair<String, CompilationUnit>> parseFiles(File root){
+        ASTParser parser;
+        parser = ASTParser.newParser(Env.JAVA_VERSION);
         parser.setResolveBindings(true);
         parser.setKind(ASTParser.K_COMPILATION_UNIT);
         parser.setBindingsRecovery(true);
-
-        parser.setUnitName(FileUtil.removeSuffix(file.getName()));
 
         String[] sources = { Env.SOURCE_FOLDER };
         String[] classpath = Env.CLASSPATH;
 
         parser.setEnvironment(classpath, sources, new String[] { "UTF-8"}, true);
-        parser.setSource(FileUtil.getFileContents(file));
-
-        CompilationUnit cu = (CompilationUnit) parser.createAST(null);
-        return cu;
+        List<File> files = FileUtil.getFiles(root, new String[]{"java"});
+        String[] paths = new String[files.size()];
+        for(int i = 0; i < files.size(); i ++){
+            paths[i] = files.get(i).getAbsolutePath();
+        }
+        String[] srcEncodings = new String[paths.length];
+        Charset charset = Charset.defaultCharset();
+        for (int i = 0; i < srcEncodings.length; i++) {
+            srcEncodings[i] = charset.name();
+        }
+        CompilationUnitASTRequestor requestor = new CompilationUnitASTRequestor();
+        parser.createASTs(paths, srcEncodings, new String[]{}, requestor, null);
+        for(Pair<String, CompilationUnit> pair : requestor.getFileList()){
+            cpMap.put(pair.getV1(), pair.getV2());
+        }
+        return requestor.getFileList();
     }
 
     public static void clearMap(){
@@ -84,15 +124,16 @@ public class ASTUtil {
      * @param varName variable name
      * @return ast node
      */
-    public static FieldDeclaration getVarDeclaration(String varType, String varName){
+    public static FieldDeclaration getVarDeclaration(String varType, String varName, boolean isStatic){
         ASTParser parser = ASTParser.newParser(Env.JAVA_VERSION);
         parser.setKind(ASTParser.K_CLASS_BODY_DECLARATIONS);
-        parser.setSource(("public " + varType + " " + varName + " = new " + varType + "();").toCharArray());
+        String modifier = isStatic ? " static " : " ";
+        parser.setSource(("public" + modifier + varType + " " + varName + " = new " + varType + "();").toCharArray());
         TypeDeclaration newLockBlock = (TypeDeclaration) parser.createAST(null);
         return newLockBlock.getFields()[0];
     }
 
-    public static boolean addLockDeclaration(ASTNode node, String lockName){
+    public static boolean addLockDeclaration(ASTNode node, String lockName, boolean isStatic){
         ASTNode parent = node;
         while(parent != null && parent.getNodeType() != ASTNode.TYPE_DECLARATION){
             parent = parent.getParent();
@@ -104,13 +145,13 @@ public class ASTUtil {
 
         TypeDeclaration typeDeclaration = (TypeDeclaration) parent;
 
-        FieldDeclaration fieldDeclaration = getVarDeclaration("ReentrantReadWriteLock", lockName);
+        FieldDeclaration fieldDeclaration = getVarDeclaration("ReentrantReadWriteLock", lockName, isStatic);
         fieldDeclaration = (FieldDeclaration) (ASTNode.copySubtree(typeDeclaration.getAST(), fieldDeclaration));
         typeDeclaration.bodyDeclarations().add(0, fieldDeclaration);
         return true;
     }
 
-    public static boolean surroundedByLock(Pair<ASTNode, Pair<ASTNode, ASTNode>> parentPair, int lockType, String varName, ASTNode firstStatement, ASTNode lastStatement){
+    public static boolean surroundedByLock(Pair<ASTNode, Pair<ASTNode, ASTNode>> parentPair, int lockType, String varName){
         String lockName = varName + "Lock";
         ASTNode parent = parentPair.getV1();
 
@@ -243,5 +284,27 @@ public class ASTUtil {
         annotation = (NormalAnnotation) ASTNode.copySubtree(node.getAST(), annotation);
         node.modifiers().add(0, annotation);
         return true;
+    }
+
+    public static String getUniquelyIdentifiers(MethodDeclaration node){
+        String methodName = node.getName().toString();
+        List<String> list = new ArrayList<>();
+        for(Object obj : node.parameters()){
+            SingleVariableDeclaration parameter = (SingleVariableDeclaration) obj;
+            list.add(parameter.toString().trim());
+        }
+        String s = String.join(", ", list);
+        String modifier = AST_Parser.setMethodModifier(node.resolveBinding());
+        String returnType = "";
+        if (! node.isConstructor()) {
+            if (node.getReturnType2() != null && node.resolveBinding() != null){
+                returnType = node.resolveBinding().getReturnType().getName();
+            }
+        }
+        return "{" + modifier + " " + returnType + " " + methodName + "(" + s + ")}";
+    }
+
+    public static String getUniquelyIdentifiers(E_MethodGraph method){
+        return "{" + method.getMethodSignatures().trim() + "}";
     }
 }

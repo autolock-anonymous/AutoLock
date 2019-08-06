@@ -1,6 +1,6 @@
 package pulse.uma.SMC;
 
-import liebes.top.main.Main;
+import top.liebes.main.Main;
 import pulse.uma.structure.E_Class;
 import pulse.uma.structure.E_Package;
 import pulse.uma.structure.E_State;

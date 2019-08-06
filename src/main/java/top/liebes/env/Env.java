@@ -1,4 +1,4 @@
-package liebes.top.env;
+package top.liebes.env;
 
 import org.eclipse.jdt.core.dom.AST;
 
@@ -7,8 +7,10 @@ import org.eclipse.jdt.core.dom.AST;
  */
 public class Env {
     public static String SOURCE_FOLDER =
-            "/Users/liebes/project/laboratory/Sip4J/runtime-sip4j-application/benchmarks/src/aeminium/fibonacci";
-//            "/Users/liebes/project/laboratory/Sip4J/runtime-sip4j-application/benchmarks/src/working_examples";
+//            "/Users/liebes/project/laboratory/Sip4J/benchmarks/src/aeminium/fibonacci";
+//            "/Users/liebes/project/laboratory/Sip4J/benchmarks/src/working_examples";
+//            "/Users/liebes/project/laboratory/Sip4J/benchmarks/src/aeminium/blackscholes";
+            "/Users/liebes/project/laboratory/Sip4J/benchmarks/src/util/hashmap";
 
     public final static String[] CLASSPATH = {
             "/Library/Java/JavaVirtualMachines/jdk1.8.0_192.jdk/Contents/Home/jre/lib/rt.jar",
