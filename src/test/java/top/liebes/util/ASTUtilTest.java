@@ -8,8 +8,6 @@ public class ASTUtilTest {
 
     @Test
     public void testParseAstFromFiles(){
-        Vector
-
         HashMap<String, String> map = new HashMap<>();
         HashMap<String, String> tmap = new HashMap<>(1);
         HashMap<String, String> smap = new HashMap<>(1, 0.75f);
