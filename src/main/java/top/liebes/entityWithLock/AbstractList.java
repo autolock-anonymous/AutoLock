@@ -1,5 +1,7 @@
-package arraylist;
+package top.liebes.entityWithLock;
 import java.util.*;
+import java.util.AbstractCollection;
+
 public abstract class AbstractList<E> extends AbstractCollection<E> implements List<E> {
 	protected AbstractList() {
 	}

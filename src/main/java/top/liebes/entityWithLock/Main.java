@@ -1,4 +1,4 @@
-package arraylist;
+package top.liebes.entityWithLock;
 import java.util.Iterator;
 public class Main {
 	public static void main(String args[]) {
