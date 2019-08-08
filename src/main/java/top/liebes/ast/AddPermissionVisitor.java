@@ -1,10 +1,13 @@
 package top.liebes.ast;
 
+import ch.qos.logback.classic.Logger;
 import org.eclipse.jdt.core.dom.PackageDeclaration;
+import org.slf4j.LoggerFactory;
 import top.liebes.entity.Pair;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
+import top.liebes.env.Env;
 import top.liebes.util.ASTUtil;
 
 import java.util.Map;
@@ -15,6 +18,10 @@ import static sip4j.parser.AST_Parser.createMethodSignature;
  * @author liebes
  */
 public class AddPermissionVisitor extends ASTVisitor {
+    private static Logger logger = (Logger) LoggerFactory.getLogger(AddPermissionVisitor.class);
+    static {
+        logger.setLevel(Env.LOG_LEVEL);
+    }
     private Map<String, Pair<String, String>> permissionMap;
     private String classname = "";
 

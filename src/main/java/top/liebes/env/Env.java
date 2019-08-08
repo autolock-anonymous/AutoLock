@@ -1,5 +1,6 @@
 package top.liebes.env;
 
+import ch.qos.logback.classic.Level;
 import org.eclipse.jdt.core.dom.AST;
 
 /**
@@ -10,7 +11,7 @@ public class Env {
 //            "/Users/liebes/project/laboratory/Sip4J/benchmarks/src/aeminium/fibonacci";
 //            "/Users/liebes/project/laboratory/Sip4J/benchmarks/src/working_examples";
 //            "/Users/liebes/project/laboratory/Sip4J/benchmarks/src/aeminium/blackscholes";
-            "/Users/liebes/project/laboratory/Sip4J/benchmarks/src/util/bitset";
+            "/Users/liebes/project/laboratory/Sip4J/benchmarks/src/util/arraylist";
 
     public final static String[] CLASSPATH = {
             "/Library/Java/JavaVirtualMachines/jdk1.8.0_192.jdk/Contents/Home/jre/lib/rt.jar",
@@ -24,4 +25,5 @@ public class Env {
 
     public final static Integer JAVA_VERSION = AST.JLS3;
 
+    public final static Level LOG_LEVEL = Level.DEBUG;
 }

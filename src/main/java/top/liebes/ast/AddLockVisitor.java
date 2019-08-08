@@ -1,6 +1,9 @@
 package top.liebes.ast;
 
+import ch.qos.logback.classic.Logger;
 import org.eclipse.jdt.core.dom.*;
+import org.slf4j.LoggerFactory;
+import top.liebes.env.Env;
 import top.liebes.util.ASTUtil;
 
 import java.util.*;
@@ -9,9 +12,14 @@ import java.util.*;
  * @author liebes
  */
 public class AddLockVisitor extends ASTVisitor {
+    private static Logger logger = (Logger) LoggerFactory.getLogger(AddLockVisitor.class);
+    static {
+        logger.setLevel(Env.LOG_LEVEL);
+    }
     private static String classname = "";
     private static String methodName = "";
-    public static Map<String, Set<ASTNode>> fieldAccessMap = new HashMap<>();
+    public Map<String, Set<ASTNode>> fieldAccessMap = new HashMap<>();
+    public Map<String, Set<String>> classMembers = new HashMap<>();
 
     @Override
     public boolean visit(MethodDeclaration node){
@@ -26,7 +34,8 @@ public class AddLockVisitor extends ASTVisitor {
             IBinding binding = node.resolveBinding();
             // check if the simple name is a class member, not parameter or reserved word
             if(binding instanceof IVariableBinding){
-                if(((IVariableBinding) binding).isField()){
+                IVariableBinding variableBinding = (IVariableBinding) binding;
+                if(variableBinding.isField()){
                     String varName = classname + "." + methodName + "." + node.getIdentifier();
                     if(fieldAccessMap.containsKey(varName)){
                         fieldAccessMap.get(varName).add(node);
@@ -35,6 +44,14 @@ public class AddLockVisitor extends ASTVisitor {
                         Set<ASTNode> set = new HashSet<>();
                         set.add(node);
                         fieldAccessMap.put(varName, set);
+                    }
+                    // mapping field to map
+                    if(! Modifier.isFinal(variableBinding.getModifiers())){
+                        classMembers.putIfAbsent(classname + "." + methodName, new HashSet<>());
+                        classMembers.computeIfPresent(classname + "." + methodName, (k, v) -> {
+                            v.add(node.getIdentifier());
+                            return v;
+                        });
                     }
                 }
             }
@@ -50,7 +67,25 @@ public class AddLockVisitor extends ASTVisitor {
         return super.visit(node);
     }
 
-    public static void clear(){
-        fieldAccessMap.clear();
+    @Override
+    public boolean visit(BlockComment node) {
+        super.visit(node);
+        node.delete();
+        return true;
+    }
+
+    @Override
+    public boolean visit(LineComment node) {
+        super.visit(node);
+        node.delete();
+        return true;
+    }
+
+
+    @Override
+    public boolean visit(Javadoc node) {
+        super.visit(node);
+        node.delete();
+        return true;
     }
 }

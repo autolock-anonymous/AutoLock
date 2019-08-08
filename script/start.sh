@@ -29,11 +29,11 @@ function read_dir(){
 function func(){
     for file in `read_dir $1`
     do
-        echo "shell : start exec folder :" `pwd`"/"${file}
+        echo "shell : start exec folder :" ${file}
         echo ".............start........."
-        echo "java -jar out/target/Sip4J-1.0-SNAPSHOT-jar-with-dependencies.jar "`pwd`"/"${file}
+        echo "java -jar target/Sip4J-1.0-SNAPSHOT-jar-with-dependencies.jar" ${file}
 #        echo `pwd`"/"${file}
-        java -jar target/Sip4J-1.0-SNAPSHOT-jar-with-dependencies.jar `pwd`"/"${file}
+        java -jar target/Sip4J-1.0-SNAPSHOT-jar-with-dependencies.jar ${file}
         echo ".............end..........."
     done
 }

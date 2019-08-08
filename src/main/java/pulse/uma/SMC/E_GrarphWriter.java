@@ -1,5 +1,6 @@
 package pulse.uma.SMC;
 
+import top.liebes.env.Env;
 import top.liebes.main.Main;
 import pulse.uma.structure.E_Class;
 import pulse.uma.structure.E_Package;
@@ -66,7 +67,7 @@ public static void createGraph(){
 	try{
 		BufferedWriter dot;
 
-		String folder= Main.getPath();
+		String folder= Env.TARGET_FOLDER;
 		
 		E_Package _pkg=EVMDD_SMC_Generator.getPkgObject();
 		LinkedList<E_Class> _listClasses=_pkg.getClasses();

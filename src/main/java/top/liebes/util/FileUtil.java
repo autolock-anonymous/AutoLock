@@ -1,9 +1,10 @@
 package top.liebes.util;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import ch.qos.logback.classic.Logger;
+import org.slf4j.LoggerFactory;
+import top.liebes.env.Env;
+
+import java.io.*;
 import java.util.*;
 
 /**
@@ -12,6 +13,12 @@ import java.util.*;
  * @author liebes
  */
 public class FileUtil {
+    private static Logger logger = (Logger) LoggerFactory.getLogger(FileUtil.class);
+
+    static {
+        logger.setLevel(Env.LOG_LEVEL);
+    }
+
     public static char[] getFileContents(File file) {
         // char array to store the file contents in
         char[] contents = null;
@@ -28,7 +35,7 @@ public class FileUtil {
 
             assert (contents.length > 0);
         } catch (IOException e) {
-            System.out.println(e.getMessage());
+            e.printStackTrace();
         }
 
         return contents;
@@ -86,6 +93,25 @@ public class FileUtil {
         }
         else{
             return s;
+        }
+    }
+
+    public static void writeToFile(String path, String content){
+        File file = new File(path);
+        if(! file.getParentFile().exists()){
+            file.getParentFile().mkdirs();
+        }
+        if(file.exists()){
+            file.delete();
+        }
+        try{
+            FileWriter fw = new FileWriter(file);
+            fw.write(content);
+            fw.close();
+        }
+        catch(IOException e){
+            logger.debug("write result to file error");
+            e.printStackTrace();
         }
     }
 }

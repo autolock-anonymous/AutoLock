@@ -1,15 +1,20 @@
 package top.liebes.util;
 
+import ch.qos.logback.classic.Logger;
 import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.*;
+import org.slf4j.LoggerFactory;
+import top.liebes.env.Env;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
 public class PdfUtil {
-
+    private static Logger logger = (Logger) LoggerFactory.getLogger(PdfUtil.class);
+    static {
+        logger.setLevel(Env.LOG_LEVEL);
+    }
     public static void generatePdfFile(String path, String source){
         // 生成File所在文件夹
         File file;
@@ -24,7 +29,6 @@ public class PdfUtil {
         catch (IOException e){
             e.printStackTrace();
         }
-
 
         // 生成PDF文档
         Document document = new Document();

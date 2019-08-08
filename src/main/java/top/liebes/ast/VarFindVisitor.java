@@ -1,6 +1,9 @@
 package top.liebes.ast;
 
+import ch.qos.logback.classic.Logger;
 import org.eclipse.jdt.core.dom.*;
+import org.slf4j.LoggerFactory;
+import top.liebes.env.Env;
 
 import java.util.HashSet;
 import java.util.List;
@@ -13,6 +16,10 @@ import java.util.Set;
  * @author liebes
  */
 public class VarFindVisitor extends ASTVisitor {
+    private static Logger logger = (Logger) LoggerFactory.getLogger(VarFindVisitor.class);
+    static {
+        logger.setLevel(Env.LOG_LEVEL);
+    }
 
     public static Set<String> vars = new HashSet<>();
 

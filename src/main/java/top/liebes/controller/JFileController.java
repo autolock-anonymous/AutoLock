@@ -1,11 +1,14 @@
 package top.liebes.controller;
 
+import ch.qos.logback.classic.Logger;
+import org.slf4j.LoggerFactory;
 import sip4j.graphstructure.E_ClassGraphs;
 import sip4j.graphstructure.E_MVertice;
 import sip4j.graphstructure.E_MethodGraph;
 import sip4j.graphstructure.E_PackGraphs;
 import sip4j.graphutilities.Graph_Generator;
 import top.liebes.entity.JFile;
+import top.liebes.env.Env;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -17,6 +20,10 @@ import java.util.Map;
  * @author liebes
  */
 public class JFileController {
+    private static Logger logger = (Logger) LoggerFactory.getLogger(JFileController.class);
+    static {
+        logger.setLevel(Env.LOG_LEVEL);
+    }
 
     public static Map<String, JFile> jfMap = new HashMap<>();
 
@@ -37,25 +44,25 @@ public class JFileController {
     public static void printInfo(){
         for(String filename : jfMap.keySet()){
             JFile jFile = jfMap.get(filename);
-            System.err.println("--------------start of file : " + filename + "----------------");
+            logger.debug("--------------start of file : " + filename + "----------------");
             for(E_ClassGraphs classGraph : jFile.getClassGraphs()){
-                System.out.println("-----------start of class :  " + classGraph.getClassGraphName() + "----------------------");
+                logger.debug("-----------start of class :  " + classGraph.getClassGraphName() + "----------------------");
                 for(E_MethodGraph mg : classGraph.getMethodgraphs()){
-                    System.out.println("-----------start of method :  " + mg.getMgraphName() + "----------------------");
+                    logger.debug("-----------start of method :  " + mg.getMgraphName() + "----------------------");
 
                     for(E_MVertice mv : mg.getVertices()){
                         if("foo".equals(mv.getVName()) || "context".equals(mv.getVName())){
                             continue;
                         }
-                        System.out.println("var name : " + mv.getVName());
-                        System.out.println("require permission : " + mv.getPre_permissions());
-                        System.out.println("ensure permission : " + mv.getPost_permissions());
+                        logger.debug("var name : " + mv.getVName());
+                        logger.debug("require permission : " + mv.getPre_permissions());
+                        logger.debug("ensure permission : " + mv.getPost_permissions());
                     }
-                    System.out.println("-----------end of method :  " + mg.getMgraphName()  + "----------------------");
+                    logger.debug("-----------end of method :  " + mg.getMgraphName()  + "----------------------");
                 }
-                System.out.println("-----------end of class :  " + classGraph.getClassGraphName() + "----------------------");
+                logger.debug("-----------end of class :  " + classGraph.getClassGraphName() + "----------------------");
             }
-            System.err.println("-----------end of file :  " + filename + "----------------------");
+            logger.debug("-----------end of file :  " + filename + "----------------------");
         }
 
     }

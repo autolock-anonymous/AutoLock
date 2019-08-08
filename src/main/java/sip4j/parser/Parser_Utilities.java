@@ -147,13 +147,13 @@ public class Parser_Utilities{
 		try {
 			file = new File(path+"/pulseTest.java");
 			if(Files.deleteIfExists(file.toPath())){
-				System.out.println("existing file is deleted");
+//				System.out.println("existing file is deleted");
 			}
 			if (file.createNewFile()){
-				System.out.println("File is created!");
+//				System.out.println("File is created!");
 			}
 			else{
-				System.out.println("File already exists.");
+//				System.out.println("File already exists.");
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -165,13 +165,13 @@ public class Parser_Utilities{
 		try {
 			file = new File(path+"/TestExample.java");
 			if(Files.deleteIfExists(file.toPath())){
-				System.out.println("existing file is deleted");
+//				System.out.println("existing file is deleted");
 			}
 			if (file.createNewFile()){
-				System.out.println("File is created!");
+//				System.out.println("File is created!");
 			}
 			else{
-				System.out.println("File already exists.");
+//				System.out.println("File already exists.");
 			}
 		} catch (IOException e) {
 			e.printStackTrace();

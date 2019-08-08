@@ -1,11 +1,20 @@
 package top.liebes.util;
 
+import ch.qos.logback.classic.Logger;
+import org.slf4j.LoggerFactory;
+import top.liebes.env.Env;
+
 import java.lang.reflect.Field;
 
 /**
  * @author liebes
  */
 public class ObjectUtil {
+    private static Logger logger = (Logger) LoggerFactory.getLogger(ObjectUtil.class);
+    static {
+        logger.setLevel(Env.LOG_LEVEL);
+    }
+
 
     public static Object deepCopy(Object objSource) throws InstantiationException, IllegalAccessException{
 

@@ -117,7 +117,7 @@ public class Graph_Controller {
 	public static String getGraphBody(E_MethodGraph graph){
 		List<String> list = graph.getMethodBody();
 		Object[] array = list.toArray();
-		System.out.println(Arrays.toString(array));
+//		System.out.println(Arrays.toString(array));
 		return Arrays.toString(array).replace("[", "").replace("]", "").replace(',', ' ').trim();
 	}
 }

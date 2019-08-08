@@ -1,5 +1,7 @@
 package sip4j.datastructure;
 
+import java.util.Objects;
+
 public class E_MParameter {
 
 	private String name;
@@ -49,4 +51,22 @@ public class E_MParameter {
 		return name.toString();
 	}
 
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (!(o instanceof E_MParameter)) {
+			return false;
+		}
+		E_MParameter that = (E_MParameter) o;
+		return position == that.position &&
+				Objects.equals(name, that.name) &&
+				Objects.equals(type, that.type);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(name, type, position);
+	}
 }

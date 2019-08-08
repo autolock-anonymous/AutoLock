@@ -35,7 +35,7 @@ public class Graph_Utilities {
 				//i++;
 			}
 		}
-		System.out.println(body);
+//		System.out.println(body);
 		return body;
 	}
 	public static boolean ifWriteEdgeExist(E_MethodGraph graph, String rf,
@@ -95,10 +95,10 @@ public class Graph_Utilities {
 		E_PackGraphs pkg = Graph_Generator.getPackage();
 		LinkedList<E_ClassGraphs> _class = pkg.getClasses();
 		for (E_ClassGraphs c : _class) {
-			System.out.println("Class Name = " + c.getClassGraphName());
+//			System.out.println("Class Name = " + c.getClassGraphName());
 			LinkedList<E_MethodGraph> mgraphs = c.getMethodgraphs();
 			for (E_MethodGraph graph : mgraphs) {
-				System.out.println("Method Name = " + graph.getMgraphName());
+//				System.out.println("Method Name = " + graph.getMgraphName());
 				LinkedList<E_MVertice> vertexes = graph.getVertices();
 				for (E_MVertice v : vertexes) {
 					if (v.getVName().equals("foo")
@@ -106,10 +106,10 @@ public class Graph_Utilities {
 					} else {
 						// System.out.println(v.getPre_permissions()+" "+v.getVType()+" "+v.getQualifiedName()+"."+v.getVName()+" >> "+v.getPost_permissions()+" "+v.getVType()+" "+
 						// v.getQualifiedName()+"."+v.getVName());
-						System.out.println(v.getPre_permissions() + " "
-								+ v.getVType() + " " + v.getVName() + " >> "
-								+ v.getPost_permissions() + " " + v.getVType()
-								+ " " + v.getVName());
+//						System.out.println(v.getPre_permissions() + " "
+//								+ v.getVType() + " " + v.getVName() + " >> "
+//								+ v.getPost_permissions() + " " + v.getVType()
+//								+ " " + v.getVName());
 					}
 				}
 			}
@@ -437,7 +437,7 @@ public class Graph_Utilities {
 			classend += "}" + "ENDOFCLASS\n\n";
 			classContracts += methodcontracts + "\n" + classend;
 			output.add(classContracts);
-			System.out.println("total methods "+methodcount);
+//			System.out.println("total methods "+methodcount);
 		}
 		return output;
 	}
@@ -614,7 +614,7 @@ public class Graph_Utilities {
 			classend += "}";
 			classContracts += methodcontracts + "\n" + classend;
 			output.add(classContracts);
-			System.out.println("total methods"+methodcount);
+//			System.out.println("total methods"+methodcount);
 		}
 		return output;
 	}

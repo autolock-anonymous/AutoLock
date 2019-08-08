@@ -1785,9 +1785,12 @@ else{
 		E_MRefField pointeefield = null;
 		IVariableBinding leftExpB = AST_Parser.getVariableBinding(laExp);
 		IVariableBinding rightExpB = AST_Parser.getVariableBinding(raExp);
-		if(leftExpB == null || rightExpB == null){
-			System.out.println("???");
-		}
+//		if(leftExpB == null ){
+//			System.err.println(laExp + " has no binding");
+//		}
+//		if(rightExpB == null){
+//			System.err.println(raExp + " has no binding");
+//		}
 		if(laExp.getNodeType() == ASTNode.FIELD_ACCESS){
 			//FieldAccess node = (FieldAccess) laExp;
 			//E_Object obj  = AST_Parser.getFieldAccessQualObj(node, _method);
@@ -2882,7 +2885,9 @@ else{
 		for (int i = 0; i < list.size(); i++) {
 			if (list.get(i).getIdentifier().equals(_method.getIdentifier())
 					&& list.get(i).getReturnType().equals(_method.getReturnType())
-					&& list.get(i).getDeclClassQName().equals(_method.getDeclClassQName())){
+					&& list.get(i).getDeclClassQName().equals(_method.getDeclClassQName())
+					&& list.get(i).getParameters().equals(_method.getParameters())
+			){
 				flag = true;
 				break;
 			}
@@ -4572,7 +4577,7 @@ else{
 			//if(AST_Parser.ifUserDefinedMethod(smb)){ // if it is a user defined method
 			if(smb.isConstructor() || smb.isDefaultConstructor()){
 				MethodDeclaration mDec = AST_Parser.getMethodDeclaration(smb);
-				System.out.println("PMethod = "+pMethod.getName());
+//				System.out.println("PMethod = "+pMethod.getName());
 				AST_Parser.addField(pMethod,"result"," "," ","rw",ASTNode.CLASS_INSTANCE_CREATION, true, null, false, false);
 				E_MRefField field = AST_Parser.addQualObjofInvokMethod(laExp, pMethod, NodeType);// add receiver object
 				//if(field != null) {

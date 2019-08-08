@@ -1,11 +1,6 @@
 package top.liebes.util;
 
-import sip4j.datastructure.E_Method;
-import sip4j.graphstructure.E_MethodGraph;
-import sip4j.parser.AST_Parser;
-import top.liebes.ast.CompilationUnitASTRequestor;
-import top.liebes.entity.Pair;
-import top.liebes.env.Env;
+import ch.qos.logback.classic.Logger;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.ToolFactory;
 import org.eclipse.jdt.core.dom.*;
@@ -13,6 +8,12 @@ import org.eclipse.jdt.core.formatter.CodeFormatter;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.text.edits.TextEdit;
+import org.slf4j.LoggerFactory;
+import sip4j.graphstructure.E_MethodGraph;
+import sip4j.parser.AST_Parser;
+import top.liebes.ast.CompilationUnitASTRequestor;
+import top.liebes.entity.Pair;
+import top.liebes.env.Env;
 
 import java.io.File;
 import java.nio.charset.Charset;
@@ -23,6 +24,10 @@ import java.util.*;
  */
 public class ASTUtil {
 
+    private static Logger logger = (Logger) LoggerFactory.getLogger(ASTUtil.class);
+    static {
+        logger.setLevel(Env.LOG_LEVEL);
+    }
     public static Map<String, CompilationUnit> cpMap = new HashMap<>();
 
     public final static int READ_LOCK = 1;
@@ -139,7 +144,7 @@ public class ASTUtil {
             parent = parent.getParent();
         }
         if(parent == null){
-            System.err.println("node has no ancestor typed type declaration");
+            logger.debug("node has no ancestor typed type declaration");
             return false;
         }
 
@@ -151,7 +156,7 @@ public class ASTUtil {
         return true;
     }
 
-    public static boolean surroundedByLock(Pair<ASTNode, Pair<ASTNode, ASTNode>> parentPair, int lockType, String varName){
+    private static boolean surroundedByLock(Pair<ASTNode, Pair<ASTNode, ASTNode>> parentPair, int lockType, String varName){
         String lockName = varName + "Lock";
         ASTNode parent = parentPair.getV1();
 
@@ -181,7 +186,7 @@ public class ASTUtil {
                 parent = parent.getParent();
             }
             if(parent == null){
-                System.err.println("node has no ancestor block");
+                logger.debug("node has no ancestor block");
                 return false;
             }
             block = (Block) parent;
@@ -198,6 +203,15 @@ public class ASTUtil {
         ExpressionStatement preStatement = null;
         ExpressionStatement postStatement = null;
 
+        // handle the condition that last statement is a return statement
+        ASTNode lastNode = (ASTNode ) block.statements().get(lastIndex);
+        if(lastNode instanceof ReturnStatement){
+            if(! addTmpVarForReturnStatement(block, lastIndex, "tmpVar")){
+                // if return type is void, then just not include the return statement
+                lastIndex --;
+            }
+        }
+
         switch (lockType){
             case READ_LOCK:
                 preStatement = getReadWriteLockExpression(lockName, true, true);
@@ -205,6 +219,7 @@ public class ASTUtil {
                 preStatement = (ExpressionStatement) ASTNode.copySubtree(parent.getAST(), preStatement);
                 postStatement = (ExpressionStatement) ASTNode.copySubtree(parent.getAST(), postStatement);
                 // should add postStatement first
+
                 block.statements().add(lastIndex + 1, postStatement);
                 block.statements().add(preIndex, preStatement);
                 break;
@@ -234,7 +249,7 @@ public class ASTUtil {
                 block.statements().add(preIndex, statement);
                 break;
             default:
-                System.err.println("wrong type of lock");
+                logger.debug("wrong type of lock");
                 return false;
         }
         return true;
@@ -306,5 +321,62 @@ public class ASTUtil {
 
     public static String getUniquelyIdentifiers(E_MethodGraph method){
         return "{" + method.getMethodSignatures().trim() + "}";
+    }
+
+    /**
+     *
+     * @param block block to add tmp var
+     * @param index index of return statement
+     * @param varName tmp var name
+     * @return true if replace, false if return type is void
+     */
+    public static boolean addTmpVarForReturnStatement(Block block, int index, String varName){
+        ReturnStatement returnStatement = (ReturnStatement) block.statements().get(index);
+        // 1 get return type
+        ASTNode clazz = returnStatement.getParent();
+        while (clazz != null && clazz.getNodeType() != ASTNode.METHOD_DECLARATION){
+            clazz = clazz.getParent();
+        }
+        MethodDeclaration tmp = (MethodDeclaration) clazz;
+        Type returnType = (Type) tmp.getReturnType2();
+        if(returnType instanceof PrimitiveType && ((PrimitiveType)returnType).getPrimitiveTypeCode() == PrimitiveType.VOID){
+            return false;
+        }
+        else{
+            ASTParser parser = ASTParser.newParser(Env.JAVA_VERSION);
+            parser.setSource(("boolean " + varName + " = a;").toCharArray());
+            parser.setKind(ASTParser.K_STATEMENTS);
+            VariableDeclarationStatement statement = (VariableDeclarationStatement) ((Block)parser.createAST(null)).statements().get(0);
+            statement.setType((Type)ASTNode.copySubtree(statement.getAST(), returnType));
+            VariableDeclarationFragment fragment = (VariableDeclarationFragment) statement.fragments().get(0);
+            fragment.setInitializer((Expression) ASTNode.copySubtree(fragment.getAST(), returnStatement.getExpression()) );
+            returnStatement.setExpression(returnStatement.getAST().newSimpleName("tmpVar"));
+            block.statements().add(index, ASTNode.copySubtree(block.getAST(), statement));
+        }
+        return true;
+    }
+
+    public static void addLock(Pair<String, String> permissionPair,
+                               Pair<ASTNode, Pair<ASTNode, ASTNode>> parentPair,
+                               String varName){
+        if(permissionPair.getV1() == null){
+            permissionPair.setV1("immutable");
+        }
+        if("immutable".equals(permissionPair.getV1() )){
+            // do nothing
+            return;
+        }
+        else if ("pure".equals(permissionPair.getV1() )){
+            // add read lock
+            ASTUtil.surroundedByLock(parentPair, ASTUtil.READ_LOCK, varName);
+        }
+        else if ("share".equals(permissionPair.getV1() ) || "full".equals(permissionPair.getV1() )){
+            ASTUtil.surroundedByLock(parentPair, ASTUtil.WRITE_LOCK, varName);
+            // add write lock
+        }
+        else if ("unique".equals(permissionPair.getV1() )){
+            ASTUtil.surroundedByLock(parentPair, ASTUtil.READ_WRITE_LOCK, varName);
+            // add sync block
+        }
     }
 }

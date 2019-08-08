@@ -257,7 +257,7 @@ public class Data_Controller {
 		E_MLocalVariable _var = null;
 		LinkedList<E_MLocalVariable> _vars = new LinkedList<E_MLocalVariable>();
 		for(E_Method m: _methods){
-			System.out.println("method name ="+m.getName());
+//			System.out.println("method name ="+m.getName());
 			_var = searchMLocalVariable(m, fName, fType, declMethod);
 			if(_var != null){
 				break;
