@@ -23,7 +23,6 @@ import java.util.*;
  * @author liebes
  */
 public class ASTUtil {
-
     private static Logger logger = (Logger) LoggerFactory.getLogger(ASTUtil.class);
     static {
         logger.setLevel(Env.LOG_LEVEL);
@@ -32,7 +31,7 @@ public class ASTUtil {
 
     public final static int READ_LOCK = 1;
     public final static int WRITE_LOCK = 2;
-    public final static int READ_WRITE_LOCK = 3;
+    public final static int EXCLUSIVE_LOCK = 3;
 
     /**
      * Parse a file to compilation unit.
@@ -114,8 +113,17 @@ public class ASTUtil {
     public static ExpressionStatement getReadWriteLockExpression(String lockName, boolean isRead, boolean isLock){
         ASTParser parser = ASTParser.newParser(Env.JAVA_VERSION);
         String lockType = isRead ? "readLock()" : "writeLock()";
-        String lockProperty = isLock ? "lock()" : "unLock()";
+        String lockProperty = isLock ? "lock()" : "unlock()";
         parser.setSource((lockName + "." + lockType + "." + lockProperty + ";").toCharArray());
+        parser.setKind(ASTParser.K_STATEMENTS);
+        ExpressionStatement statement = (ExpressionStatement) ((Block)parser.createAST(null)).statements().get(0);
+        return statement;
+    }
+
+    public static ExpressionStatement getExclusiveLockExpression(String lockName, boolean isLock){
+        ASTParser parser = ASTParser.newParser(Env.JAVA_VERSION);
+        String lockProperty = isLock ? "lock()" : "unlock()";
+        parser.setSource((lockName + "." + lockProperty + ";").toCharArray());
         parser.setKind(ASTParser.K_STATEMENTS);
         ExpressionStatement statement = (ExpressionStatement) ((Block)parser.createAST(null)).statements().get(0);
         return statement;
@@ -150,7 +158,13 @@ public class ASTUtil {
 
         TypeDeclaration typeDeclaration = (TypeDeclaration) parent;
 
-        FieldDeclaration fieldDeclaration = getVarDeclaration("ReentrantReadWriteLock", lockName, isStatic);
+        String tmp = lockName.substring(0, lockName.length() - 4) + "rwLock";
+
+        FieldDeclaration fieldDeclaration = getVarDeclaration("ReentrantReadWriteLock", tmp, isStatic);
+        fieldDeclaration = (FieldDeclaration) (ASTNode.copySubtree(typeDeclaration.getAST(), fieldDeclaration));
+        typeDeclaration.bodyDeclarations().add(0, fieldDeclaration);
+
+        fieldDeclaration = getVarDeclaration("ReentrantLock", lockName, isStatic);
         fieldDeclaration = (FieldDeclaration) (ASTNode.copySubtree(typeDeclaration.getAST(), fieldDeclaration));
         typeDeclaration.bodyDeclarations().add(0, fieldDeclaration);
         return true;
@@ -158,6 +172,7 @@ public class ASTUtil {
 
     private static boolean surroundedByLock(Pair<ASTNode, Pair<ASTNode, ASTNode>> parentPair, int lockType, String varName){
         String lockName = varName + "Lock";
+        String lockrwName = varName + "rwLock";
         ASTNode parent = parentPair.getV1();
 
         int preIndex = -1;
@@ -212,10 +227,12 @@ public class ASTUtil {
             }
         }
 
+
+
         switch (lockType){
             case READ_LOCK:
-                preStatement = getReadWriteLockExpression(lockName, true, true);
-                postStatement = getReadWriteLockExpression(lockName, true, false);
+                preStatement = getReadWriteLockExpression(lockrwName, true, true);
+                postStatement = getReadWriteLockExpression(lockrwName, true, false);
                 preStatement = (ExpressionStatement) ASTNode.copySubtree(parent.getAST(), preStatement);
                 postStatement = (ExpressionStatement) ASTNode.copySubtree(parent.getAST(), postStatement);
                 // should add postStatement first
@@ -224,36 +241,91 @@ public class ASTUtil {
                 block.statements().add(preIndex, preStatement);
                 break;
             case WRITE_LOCK:
-                preStatement = getReadWriteLockExpression(lockName, false, true);
-                postStatement = getReadWriteLockExpression(lockName, false, false);
+                preStatement = getReadWriteLockExpression(lockrwName, false, true);
+                postStatement = getReadWriteLockExpression(lockrwName, false, false);
                 preStatement = (ExpressionStatement) ASTNode.copySubtree(parent.getAST(), preStatement);
                 postStatement = (ExpressionStatement) ASTNode.copySubtree(parent.getAST(), postStatement);
                 // should add postStatement first
                 block.statements().add(lastIndex + 1, postStatement);
                 block.statements().add(preIndex, preStatement);
                 break;
-            case READ_WRITE_LOCK:
-                ASTNode node = parentPair.getV1();
-                SynchronizedStatement statement = node.getAST().newSynchronizedStatement();
-                statement.setExpression(node.getAST().newSimpleName(varName));
-                Block tb = node.getAST().newBlock();
-                // replace statements with sync statement
-                for(int i = preIndex; i < lastIndex + 1; i ++){
-                    ASTNode t = (ASTNode) block.statements().get(i);
-                    tb.statements().add(ASTNode.copySubtree(statement.getAST(), t));
-                    block.statements().remove(i);
-                    i --;
-                    lastIndex --;
-                }
-                statement.setBody(tb);
-                block.statements().add(preIndex, statement);
+            case EXCLUSIVE_LOCK:
+                preStatement = getExclusiveLockExpression(lockName, true);
+                postStatement = getExclusiveLockExpression(lockName, false);
+                preStatement = (ExpressionStatement) ASTNode.copySubtree(parent.getAST(), preStatement);
+                postStatement = (ExpressionStatement) ASTNode.copySubtree(parent.getAST(), postStatement);
+                // should add postStatement first
+                block.statements().add(lastIndex + 1, postStatement);
+                block.statements().add(preIndex, preStatement);
                 break;
+//                ASTNode node = parentPair.getV1();
+//                SynchronizedStatement statement = node.getAST().newSynchronizedStatement();
+//                statement.setExpression(node.getAST().newSimpleName(varName));
+//                Block tb = node.getAST().newBlock();
+//                statement.setBody(tb);
+//                block.statements().add(preIndex, statement);
+//                // replace statements with sync statement
+//                for(int i = preIndex + 1; i < lastIndex + 2; i ++){
+//                    ASTNode t = (ASTNode) block.statements().get(i);
+//                    block.statements().remove(i);
+//                    tb.statements().add(t);
+//                    i --;
+//                    lastIndex --;
+//                }
+//                break;
             default:
                 logger.debug("wrong type of lock");
                 return false;
         }
+
+        // correct the order
+        lastIndex += 2;
+        for(int i = preIndex + 1; i < lastIndex; i ++){
+            if(isLockStatement((Statement) block.statements().get(i), true)){
+                Object tmp = block.statements().get(i);
+                block.statements().remove(i);
+                block.statements().add(preIndex, tmp);
+                preIndex ++;
+                i --;
+            }
+        }
+
+        for(int i = lastIndex - 1; i > preIndex; i --){
+            if(isLockStatement((Statement) block.statements().get(i), false)){
+                Object tmp = block.statements().get(i);
+                block.statements().remove(i);
+                block.statements().add(lastIndex, tmp);
+                lastIndex --;
+                i ++;
+            }
+        }
         return true;
     }
+
+    public static boolean isLockStatement(Statement statement, boolean isLock){
+        String lock = isLock ? "lock" : "unlock";
+        if(statement.getNodeType() == ASTNode.EXPRESSION_STATEMENT){
+            ExpressionStatement es = (ExpressionStatement) statement;
+            if(es.getExpression().getNodeType() == ASTNode.METHOD_INVOCATION){
+                MethodInvocation mi = (MethodInvocation) es.getExpression();
+                if(lock.equals(mi.getName().toString())){
+                    if(mi.getExpression().getNodeType() == ASTNode.METHOD_INVOCATION){
+                        MethodInvocation mi1 = (MethodInvocation) mi.getExpression();
+                        if("readLock".equals(mi1.getName().toString()) || "writeLock".equals(mi1.getName().toString())){
+                            return true;
+                        }
+                    }
+                    else if (mi.getExpression().getNodeType() == ASTNode.SIMPLE_NAME){
+                        if(mi.getExpression().toString().endsWith("Lock")){
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
 
     public static String format(String code) {
         Map<String, String> hashMap = new HashMap<>();
@@ -302,21 +374,21 @@ public class ASTUtil {
     }
 
     public static String getUniquelyIdentifiers(MethodDeclaration node){
-        String methodName = node.getName().toString();
+        String methodName = node.getName().toString().trim();
         List<String> list = new ArrayList<>();
         for(Object obj : node.parameters()){
             SingleVariableDeclaration parameter = (SingleVariableDeclaration) obj;
             list.add(parameter.toString().trim());
         }
         String s = String.join(", ", list);
-        String modifier = AST_Parser.setMethodModifier(node.resolveBinding());
+        String modifier = AST_Parser.setMethodModifier(node.resolveBinding()).trim();
         String returnType = "";
         if (! node.isConstructor()) {
             if (node.getReturnType2() != null && node.resolveBinding() != null){
                 returnType = node.resolveBinding().getReturnType().getName();
             }
         }
-        return "{" + modifier + " " + returnType + " " + methodName + "(" + s + ")}";
+        return "{" + modifier + (modifier.equals("") ? "" : " ")  + returnType + (returnType.equals("") ? "" : " ") + methodName + "(" + s + ")}";
     }
 
     public static String getUniquelyIdentifiers(E_MethodGraph method){
@@ -375,8 +447,16 @@ public class ASTUtil {
             // add write lock
         }
         else if ("unique".equals(permissionPair.getV1() )){
-            ASTUtil.surroundedByLock(parentPair, ASTUtil.READ_WRITE_LOCK, varName);
+            ASTUtil.surroundedByLock(parentPair, ASTUtil.EXCLUSIVE_LOCK, varName);
             // add sync block
         }
+    }
+
+    public static ImportDeclaration getImporDeclaration(String importName){
+        ASTParser parser = ASTParser.newParser(Env.JAVA_VERSION);
+        parser.setKind(ASTParser.K_COMPILATION_UNIT);
+        parser.setSource(("import " + importName + ";").toCharArray());
+        CompilationUnit node = (CompilationUnit)parser.createAST(null);
+        return (ImportDeclaration) node.imports().get(0);
     }
 }

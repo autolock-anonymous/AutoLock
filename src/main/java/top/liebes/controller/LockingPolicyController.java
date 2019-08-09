@@ -11,10 +11,7 @@ import top.liebes.ast.AddPermissionVisitor;
 import top.liebes.entity.JFile;
 import top.liebes.entity.Pair;
 import top.liebes.env.Env;
-import top.liebes.util.ASTUtil;
-import top.liebes.util.FileUtil;
-import top.liebes.util.GraphUtil;
-import top.liebes.util.PdfUtil;
+import top.liebes.util.*;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -50,14 +47,6 @@ public class LockingPolicyController {
 
             // get compilation unit for each file
             final CompilationUnit cu = ASTUtil.getCompilationUnit(file, null);
-
-            // get all class member
-//            VarFindVisitor visitor = new VarFindVisitor();
-//            try {
-//                cu.accept(visitor);
-//            } catch (IllegalArgumentException ex) {
-//                ex.printStackTrace();
-//            }
 
             // store each class member appearance in each method
             AddLockVisitor lockVisitor = new AddLockVisitor();
@@ -113,14 +102,14 @@ public class LockingPolicyController {
                 if(isFinal){
                     continue;
                 }
-                String[] tmp = s.split("\\.");
+                String[] tmp = s.split("(\\.\\{|}\\.)");
                 // should be like className.methodName.varName
                 if(tmp.length != 3){
                     logger.debug("name error : " + s);
                     continue;
                 }
                 String className = tmp[0];
-                String methodName = tmp[1];
+                String methodName = "{" + tmp[1] + "}";
                 String varName = tmp[2];
                 String lockName = varName + "Lock";
                 Pair<String, String> permissionPair = permissionMap.get(s);
@@ -135,6 +124,7 @@ public class LockingPolicyController {
                         lockDeclarationMarkSet.add(className + "." + varName);
                     }
                 }
+                ExperimentUtil.increase(className, permissionPair.getV1());
                 ASTUtil.addLock(permissionPair, parentPair, varName);
             }
 

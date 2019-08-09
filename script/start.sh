@@ -33,9 +33,9 @@ function func(){
         echo ".............start........."
         echo "java -jar target/Sip4J-1.0-SNAPSHOT-jar-with-dependencies.jar" ${file}
 #        echo `pwd`"/"${file}
-        java -jar target/Sip4J-1.0-SNAPSHOT-jar-with-dependencies.jar ${file}
+        java -jar target/Sip4J-1.0-SNAPSHOT-jar-with-dependencies.jar ${file} $2
         echo ".............end..........."
     done
 }
 
-func $1
+func $1 $2

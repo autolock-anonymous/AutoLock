@@ -1,16 +1,14 @@
 package top.liebes.ast;
 
 import ch.qos.logback.classic.Logger;
-import org.eclipse.jdt.core.dom.PackageDeclaration;
+import org.eclipse.jdt.core.dom.*;
 import org.slf4j.LoggerFactory;
 import top.liebes.entity.Pair;
-import org.eclipse.jdt.core.dom.ASTVisitor;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
 import top.liebes.env.Env;
 import top.liebes.util.ASTUtil;
 
 import java.util.Map;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static sip4j.parser.AST_Parser.createMethodSignature;
 
@@ -60,5 +58,15 @@ public class AddPermissionVisitor extends ASTVisitor {
 
     public String getPackageName() {
         return packageName;
+    }
+
+    // add import
+    @Override
+    public boolean visit(CompilationUnit node) {
+        ImportDeclaration permissionImport = ASTUtil.getImporDeclaration(Env.PERM_IMPORT_DECL);
+        ImportDeclaration lockImport = ASTUtil.getImporDeclaration("java.util.concurrent.locks.ReentrantReadWriteLock");
+        node.imports().add(ASTNode.copySubtree(node.getAST(), permissionImport));
+        node.imports().add(ASTNode.copySubtree(node.getAST(), lockImport));
+        return super.visit(node);
     }
 }

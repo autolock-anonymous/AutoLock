@@ -11,7 +11,7 @@ public class Env {
 //            "/Users/liebes/project/laboratory/Sip4J/benchmarks/src/aeminium/fibonacci";
 //            "/Users/liebes/project/laboratory/Sip4J/benchmarks/src/working_examples";
 //            "/Users/liebes/project/laboratory/Sip4J/benchmarks/src/aeminium/blackscholes";
-            "/Users/liebes/project/laboratory/Sip4J/benchmarks/src/util/arraylist";
+            "/Users/liebes/project/laboratory/Sip4J/benchmarks/src/aeminium/blackscholes";
 
     public final static String[] CLASSPATH = {
             "/Library/Java/JavaVirtualMachines/jdk1.8.0_192.jdk/Contents/Home/jre/lib/rt.jar",
@@ -25,5 +25,7 @@ public class Env {
 
     public final static Integer JAVA_VERSION = AST.JLS3;
 
-    public final static Level LOG_LEVEL = Level.DEBUG;
+    public static Level LOG_LEVEL = Level.DEBUG;
+
+    public final static String PERM_IMPORT_DECL = "top.liebes.anno.Perm";
 }
