@@ -157,22 +157,13 @@ public class ASTUtil {
         }
 
         TypeDeclaration typeDeclaration = (TypeDeclaration) parent;
-
-        String tmp = lockName.substring(0, lockName.length() - 4) + "rwLock";
-
-        FieldDeclaration fieldDeclaration = getVarDeclaration("ReentrantReadWriteLock", tmp, isStatic);
-        fieldDeclaration = (FieldDeclaration) (ASTNode.copySubtree(typeDeclaration.getAST(), fieldDeclaration));
-        typeDeclaration.bodyDeclarations().add(0, fieldDeclaration);
-
-        fieldDeclaration = getVarDeclaration("ReentrantLock", lockName, isStatic);
+        FieldDeclaration fieldDeclaration = getVarDeclaration("ReentrantReadWriteLock", lockName, isStatic);
         fieldDeclaration = (FieldDeclaration) (ASTNode.copySubtree(typeDeclaration.getAST(), fieldDeclaration));
         typeDeclaration.bodyDeclarations().add(0, fieldDeclaration);
         return true;
     }
 
-    private static boolean surroundedByLock(Pair<ASTNode, Pair<ASTNode, ASTNode>> parentPair, int lockType, String varName){
-        String lockName = varName + "Lock";
-        String lockrwName = varName + "rwLock";
+    private static boolean surroundedByLock(Pair<ASTNode, Pair<ASTNode, ASTNode>> parentPair, int lockType, String lockName){
         ASTNode parent = parentPair.getV1();
 
         int preIndex = -1;
@@ -231,8 +222,8 @@ public class ASTUtil {
 
         switch (lockType){
             case READ_LOCK:
-                preStatement = getReadWriteLockExpression(lockrwName, true, true);
-                postStatement = getReadWriteLockExpression(lockrwName, true, false);
+                preStatement = getReadWriteLockExpression(lockName, true, true);
+                postStatement = getReadWriteLockExpression(lockName, true, false);
                 preStatement = (ExpressionStatement) ASTNode.copySubtree(parent.getAST(), preStatement);
                 postStatement = (ExpressionStatement) ASTNode.copySubtree(parent.getAST(), postStatement);
                 // should add postStatement first
@@ -241,8 +232,8 @@ public class ASTUtil {
                 block.statements().add(preIndex, preStatement);
                 break;
             case WRITE_LOCK:
-                preStatement = getReadWriteLockExpression(lockrwName, false, true);
-                postStatement = getReadWriteLockExpression(lockrwName, false, false);
+                preStatement = getReadWriteLockExpression(lockName, false, true);
+                postStatement = getReadWriteLockExpression(lockName, false, false);
                 preStatement = (ExpressionStatement) ASTNode.copySubtree(parent.getAST(), preStatement);
                 postStatement = (ExpressionStatement) ASTNode.copySubtree(parent.getAST(), postStatement);
                 // should add postStatement first
@@ -316,7 +307,9 @@ public class ASTUtil {
                         }
                     }
                     else if (mi.getExpression().getNodeType() == ASTNode.SIMPLE_NAME){
-                        if(mi.getExpression().toString().endsWith("Lock")){
+                        if(mi.getExpression().toString().endsWith("lock")
+                                || mi.getExpression().toString().endsWith("Lock")
+                        ){
                             return true;
                         }
                     }
@@ -430,7 +423,7 @@ public class ASTUtil {
 
     public static void addLock(Pair<String, String> permissionPair,
                                Pair<ASTNode, Pair<ASTNode, ASTNode>> parentPair,
-                               String varName){
+                               String lockName){
         if(permissionPair.getV1() == null){
             permissionPair.setV1("immutable");
         }
@@ -440,15 +433,15 @@ public class ASTUtil {
         }
         else if ("pure".equals(permissionPair.getV1() )){
             // add read lock
-            ASTUtil.surroundedByLock(parentPair, ASTUtil.READ_LOCK, varName);
+            ASTUtil.surroundedByLock(parentPair, ASTUtil.READ_LOCK, lockName);
         }
-        else if ("share".equals(permissionPair.getV1() ) || "full".equals(permissionPair.getV1() )){
-            ASTUtil.surroundedByLock(parentPair, ASTUtil.WRITE_LOCK, varName);
+        else if (
+                "share".equals(permissionPair.getV1())
+                || "full".equals(permissionPair.getV1())
+                || "unique".equals(permissionPair.getV1())
+        ){
+            ASTUtil.surroundedByLock(parentPair, ASTUtil.WRITE_LOCK, lockName);
             // add write lock
-        }
-        else if ("unique".equals(permissionPair.getV1() )){
-            ASTUtil.surroundedByLock(parentPair, ASTUtil.EXCLUSIVE_LOCK, varName);
-            // add sync block
         }
     }
 

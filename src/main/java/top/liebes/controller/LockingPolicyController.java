@@ -3,9 +3,6 @@ package top.liebes.controller;
 import ch.qos.logback.classic.Logger;
 import org.eclipse.jdt.core.dom.*;
 import org.slf4j.LoggerFactory;
-import sip4j.graphstructure.E_ClassGraphs;
-import sip4j.graphstructure.E_MVertice;
-import sip4j.graphstructure.E_MethodGraph;
 import top.liebes.ast.AddLockVisitor;
 import top.liebes.ast.AddPermissionVisitor;
 import top.liebes.entity.JFile;
@@ -14,8 +11,6 @@ import top.liebes.env.Env;
 import top.liebes.util.*;
 
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.*;
 
 public class LockingPolicyController {
@@ -59,6 +54,8 @@ public class LockingPolicyController {
             // get information from sip4j
             Map<String, Pair<String, String>> permissionMap = GraphUtil.getPermissionForVar(jFile);
             Map<String, Pair<String, String>> permissionForMethodMap = GraphUtil.getPermissionForMethod(jFile, lockVisitor.classMembers);
+            Map<String, String> varLockMap = GraphUtil.getLockForVar(jFile);
+
 //            for(Map.Entry<String, Pair<String, String> > entry : permissionForMethodMap.entrySet()){
 //                logger.debug(entry.getKey() + " " + entry.getValue().getV1() + " " + entry.getValue().getV2());
 //            }
@@ -77,31 +74,32 @@ public class LockingPolicyController {
             Map<String, Set<ASTNode>> sortMap = new TreeMap<>(new GraphUtil.MapKeyComparator());
             sortMap.putAll(lockVisitor.fieldAccessMap);
 
+            Set<String> unionLockMarkSet = new HashSet<>();
+
+            Map<String, Set<ASTNode>> nodeLockMap = new HashMap<>();
             for(Map.Entry<String, Set<ASTNode>> entry : sortMap.entrySet()){
                 String s = entry.getKey();
 
-                // used to add lock in the smallest block
-                ASTNode firstStatement = null;
-                ASTNode lastStatement = null;
-                // <parent, <firstStatement, lastStatement>
-
-                boolean isStatic = false;
-                boolean isFinal = false;
-                for(ASTNode astNode : entry.getValue()){
-                    if(astNode instanceof SimpleName){
-                        SimpleName simpleName = (SimpleName) astNode;
-                        IBinding binding = simpleName.resolveBinding();
-                        if(binding instanceof IVariableBinding){
-                            isStatic = Modifier.isStatic(binding.getModifiers());
-                            isFinal = Modifier.isFinal(binding.getModifiers());
-                            break;
-                        }
-                    }
-                }
-                // final field does not need lock
-                if(isFinal){
+                String[] tmp = s.split("(\\.\\{|}\\.)");
+                // should be like className.methodName.varName
+                if(tmp.length != 3){
+                    logger.debug("name error : " + s);
                     continue;
                 }
+                String className = tmp[0];
+                String methodName = "{" + tmp[1] + "}";
+                String varName = tmp[2];
+                if(varLockMap.containsKey(className + "." + varName)){
+                    String key = className + "." + methodName + "." + varLockMap.get(className + "." + varName);
+                    nodeLockMap.putIfAbsent(key , new HashSet<>());
+                    nodeLockMap.get(key).addAll(entry.getValue());
+                }
+            }
+
+
+            for(Map.Entry<String, Set<ASTNode>> entry : sortMap.entrySet()){
+                String s = entry.getKey();
+
                 String[] tmp = s.split("(\\.\\{|}\\.)");
                 // should be like className.methodName.varName
                 if(tmp.length != 3){
@@ -112,20 +110,42 @@ public class LockingPolicyController {
                 String methodName = "{" + tmp[1] + "}";
                 String varName = tmp[2];
                 String lockName = varName + "Lock";
+
+                Set<ASTNode> nodeSet = entry.getValue();
+
                 Pair<String, String> permissionPair = permissionMap.get(s);
                 if(permissionPair == null){
                     logger.debug(s + " has no permission");
                     continue;
                 }
-                Pair<ASTNode, Pair<ASTNode, ASTNode>> parentPair = GraphUtil.getParent(entry.getValue());
-                if(! lockDeclarationMarkSet.contains(className + "." + varName)){
-                    boolean flag = ASTUtil.addLockDeclaration(parentPair.getV1(), lockName, isStatic);
+
+                if ("share".equals(permissionPair.getV1())
+                        || "full".equals(permissionPair.getV1())
+                        || "unique".equals(permissionPair.getV1())
+                ){
+                    lockName = varLockMap.get(className + "." + varName);
+                    String key = className + "." + methodName + "." + lockName;
+                    if(unionLockMarkSet.contains(key)){
+                        // this variable has already been locked
+                        continue;
+                    }
+                    unionLockMarkSet.add(key);
+
+                    nodeSet = nodeLockMap.get(key);
+                    if(nodeSet == null){
+                        logger.error("errors");
+                    }
+                }
+
+                Pair<ASTNode, Pair<ASTNode, ASTNode>> parentPair = GraphUtil.getParentNode(nodeSet);
+                if(! lockDeclarationMarkSet.contains(lockName)){
+                    boolean flag = ASTUtil.addLockDeclaration(parentPair.getV1(), lockName, true);
                     if(flag){
-                        lockDeclarationMarkSet.add(className + "." + varName);
+                        lockDeclarationMarkSet.add(lockName);
                     }
                 }
                 ExperimentUtil.increase(className, permissionPair.getV1());
-                ASTUtil.addLock(permissionPair, parentPair, varName);
+                ASTUtil.addLock(permissionPair, parentPair, lockName);
             }
 
             // write result to file
@@ -133,7 +153,7 @@ public class LockingPolicyController {
             String targetFilePath = Env.TARGET_FOLDER + "/" + folderName + "/" + file.getName();
             FileUtil.writeToFile(targetFilePath, ASTUtil.format(cu.toString()));
 
-            PdfUtil.generatePdfFile(Env.TARGET_FOLDER + "/pdf/" + folderName + "/" + FileUtil.removeSuffix(file.getName()) + ".pdf", cu.toString());
+//            PdfUtil.generatePdfFile(Env.TARGET_FOLDER + "/pdf/" + folderName + "/" + FileUtil.removeSuffix(file.getName()) + ".pdf", cu.toString());
         }
     }
 

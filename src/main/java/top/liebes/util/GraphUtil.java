@@ -6,17 +6,12 @@ import org.slf4j.LoggerFactory;
 import sip4j.graphstructure.E_ClassGraphs;
 import sip4j.graphstructure.E_MVertice;
 import sip4j.graphstructure.E_MethodGraph;
-import top.liebes.ast.AddLockVisitor;
-import top.liebes.ast.AddPermissionVisitor;
 import top.liebes.ast.VarFindVisitor;
 import top.liebes.controller.JFileController;
 import top.liebes.entity.JFile;
 import top.liebes.entity.Pair;
 import top.liebes.env.Env;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.*;
 
 /**
@@ -30,7 +25,7 @@ public class GraphUtil {
 
     private TypeDeclaration newLockBlock;
 
-    public static Pair<ASTNode, Pair<ASTNode, ASTNode>> getParent(Set<ASTNode> nodeSet){
+    public static Pair<ASTNode, Pair<ASTNode, ASTNode>> getParentNode(Set<ASTNode> nodeSet){
         ASTNode parent = null;
         List<ASTNode> parentList = new ArrayList<>();
         boolean isFirstIter = true;
@@ -118,13 +113,80 @@ public class GraphUtil {
         }
     }
 
+    /**
+     * use union set to join same variable together that uses same lock
+     * @param jFile
+     * @return
+     */
+    public static Map<String, String> getLockForVar(JFile jFile){
+        Map<String, String> reMap = new HashMap<>();
+        for(E_ClassGraphs classGraph : jFile.getClassGraphs()){
+            for(E_MethodGraph methodGraph : classGraph.getMethodgraphs()){
+                List<String> list = new ArrayList<>();
+                for(E_MVertice vertex : methodGraph.getVertices()){
+                    if("foo".equals(vertex.getVName()) || "context".equals(vertex.getVName()) || ! vertex.isField()){
+                        continue;
+                    }
+                    if(
+                            "share".equals(vertex.getPre_permissions())
+                                    || "unique".equals(vertex.getPre_permissions())
+                                    || "full".equals(vertex.getPre_permissions())
+                    ){
+                        list.add(classGraph.getClassGraphName() + "." + vertex.getVName());
+                    }
+                }
+                if(list.size() > 0){
+                    reMap.putIfAbsent(list.get(0), list.get(0));
+                    for(int i = 1; i < list.size(); i ++){
+                        reMap.put(list.get(i), getParent(reMap, list.get(0)));
+                    }
+                }
+            }
+        }
+        Map<String, Set<String>> res = new HashMap<>();
+        for(Map.Entry<String, String> entry : reMap.entrySet()){
+            String v = entry.getKey();
+            String pa = getParent(reMap, entry.getValue());
+            if(! res.containsKey(pa)){
+                Set<String> tmp = new TreeSet<>();
+                tmp.add(pa);
+                res.put(pa, tmp);
+            }
+            res.get(pa).add(v);
+            res.put(v, res.get(pa));
+        }
+        Map<String, String> resMap = new TreeMap<>();
+        for(Map.Entry<String, Set<String>> entry : res.entrySet()){
+            List<String> list = new ArrayList<>();
+            for(String s : entry.getValue()){
+                list.add(s.substring(s.lastIndexOf(".") + 1));
+            }
+            resMap.put(entry.getKey(), String.join("_", list) + "Lock");
+        }
+
+        return resMap;
+    }
+
+    private static String getParent(Map<String, String> map, String s){
+        if(s == null){
+            logger.error("error, null pointer");
+            return null;
+        }
+        if(s.equals(map.get(s))){
+            return s;
+        }
+        String res = getParent(map, map.get(s));
+        map.put(s, res);
+        return res;
+    }
+
     public static Map<String, Pair<String, String>> getPermissionForVar(JFile jFile){
         // get information from sip4j
         Map<String, Pair<String, String>> permissionMap = new HashMap<>();
         for(E_ClassGraphs classGraph : jFile.getClassGraphs()){
             for(E_MethodGraph methodGraph : classGraph.getMethodgraphs()){
                 for(E_MVertice vertex : methodGraph.getVertices()){
-                    if("foo".equals(vertex.getVName()) || "context".equals(vertex.getVName())){
+                    if("foo".equals(vertex.getVName()) || "context".equals(vertex.getVName()) || ! vertex.isField()){
                         continue;
                     }
                     String s = classGraph.getClassGraphName() + "."
@@ -147,7 +209,7 @@ public class GraphUtil {
                 List<String> prePermissionList = new ArrayList<>();
                 List<String> postPermissionList = new ArrayList<>();
                 for(E_MVertice vertex : methodGraph.getVertices()){
-                    if("foo".equals(vertex.getVName()) || "context".equals(vertex.getVName())){
+                    if("foo".equals(vertex.getVName()) || "context".equals(vertex.getVName()) || !vertex.isField()){
                         continue;
                     }
                     if(includedVars.containsKey(methodName) && includedVars.get(methodName).contains(vertex.getVName())){

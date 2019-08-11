@@ -24,13 +24,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * @author liebes
  */
 public class Main  {
-	public void test(){
-		ReentrantLock lock = new ReentrantLock();
-		ReentrantReadWriteLock lock1 = new ReentrantReadWriteLock();
-		lock1.readLock().lock();
-		lock.lock();
-	}
-
 	private static Logger logger = (Logger) LoggerFactory.getLogger(Main.class);
 	static {
 		logger.setLevel(Env.LOG_LEVEL);

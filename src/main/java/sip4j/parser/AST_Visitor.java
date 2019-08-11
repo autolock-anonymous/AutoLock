@@ -109,7 +109,7 @@ public class AST_Visitor extends ASTVisitor {
 					Expression raExp = node.getRightHandSide();
 					//E_Method _method = Data_Controller.searchMethod(AST_Parser.fetchParentMethodDecl(node));
 					//E_Class _mainClass = null;
-					//HashMap<TypeDeclaration, MethodDeclaration> mainMap = AST_Parser.getMainDeclarationFromProject((TypeDeclaration)bNode.getParent());
+					//HashMap<TypeDeclaration, MethodDeclaration> mainMap = AST_Parser.getMainDeclarationFromProject((TypeDeclaration)bNode.getParentNode());
 //					*f(mainMap != null && mainMap.isEmpty() == false){
 //						Set mapSet = (Set) mainMap.entrySet();
 //						Iterator mapIterator = mapSet.iterator();

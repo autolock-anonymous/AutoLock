@@ -35,16 +35,13 @@ public class AddLockVisitor extends ASTVisitor {
             // check if the simple name is a class member, not parameter or reserved word
             if(binding instanceof IVariableBinding){
                 IVariableBinding variableBinding = (IVariableBinding) binding;
-                if(variableBinding.isField()){
+                if(variableBinding.isField() && ! Modifier.isFinal(variableBinding.getModifiers())){
                     String varName = classname + "." + methodName + "." + node.getIdentifier();
-                    if(fieldAccessMap.containsKey(varName)){
-                        fieldAccessMap.get(varName).add(node);
-                    }
-                    else{
-                        Set<ASTNode> set = new HashSet<>();
-                        set.add(node);
-                        fieldAccessMap.put(varName, set);
-                    }
+                    fieldAccessMap.putIfAbsent(varName, new HashSet<>());
+                    fieldAccessMap.computeIfPresent(varName, (k, v) -> {
+                        v.add(node);
+                        return v;
+                    });
                     // mapping field to map
                     if(! Modifier.isFinal(variableBinding.getModifiers())){
                         classMembers.putIfAbsent(classname + "." + methodName, new HashSet<>());

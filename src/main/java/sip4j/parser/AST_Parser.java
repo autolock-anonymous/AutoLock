@@ -1163,7 +1163,7 @@ public class AST_Parser {
 				// }
 			}
 			// if simple name is a parameter
-			//if (node.getParent().getNodeType() != ASTNode.SINGLE_VARIABLE_DECLARATION) {
+			//if (node.getParentNode().getNodeType() != ASTNode.SINGLE_VARIABLE_DECLARATION) {
 			if (pb.isParameter()) {
 				pos = pb.getVariableId();
 				//if (pb.getType().isPrimitive() == false) {
