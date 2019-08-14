@@ -10,7 +10,7 @@ public class Env {
     public static String SOURCE_FOLDER =
 //            "/Users/liebes/project/laboratory/Sip4J/benchmarks/src/aeminium/fibonacci";
 //            "/Users/liebes/project/laboratory/Sip4J/benchmarks/src/working_examples";
-            "/Users/liebes/project/laboratory/Sip4J/benchmarks/src/util/vector";
+            "/Users/liebes/project/laboratory/Sip4J/benchmarks/src/util/hashmap";
 //            "/Users/liebes/project/laboratory/Sip4J/benchmarks/src/aeminium/blackscholes";
 
     public final static String[] CLASSPATH = {

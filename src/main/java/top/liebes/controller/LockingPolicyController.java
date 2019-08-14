@@ -54,7 +54,7 @@ public class LockingPolicyController {
             // get information from sip4j
             Map<String, Pair<String, String>> permissionMap = GraphUtil.getPermissionForVar(jFile);
             Map<String, Pair<String, String>> permissionForMethodMap = GraphUtil.getPermissionForMethod(jFile, lockVisitor.classMembers);
-            Map<String, String> varLockMap = GraphUtil.getLockForVar(jFile);
+            Map<String, String> varLockMap = GraphUtil.getLockForVar(jFile, lockVisitor.classMembers);
 
 //            for(Map.Entry<String, Pair<String, String> > entry : permissionForMethodMap.entrySet()){
 //                logger.debug(entry.getKey() + " " + entry.getValue().getV1() + " " + entry.getValue().getV2());
@@ -109,7 +109,7 @@ public class LockingPolicyController {
                 String className = tmp[0];
                 String methodName = "{" + tmp[1] + "}";
                 String varName = tmp[2];
-                String lockName = varName + "Lock";
+                String lockName = varLockMap.getOrDefault(className + "." + varName, varName + "Lock");
 
                 Set<ASTNode> nodeSet = entry.getValue();
 
@@ -123,7 +123,6 @@ public class LockingPolicyController {
                         || "full".equals(permissionPair.getV1())
                         || "unique".equals(permissionPair.getV1())
                 ){
-                    lockName = varLockMap.get(className + "." + varName);
                     String key = className + "." + methodName + "." + lockName;
                     if(unionLockMarkSet.contains(key)){
                         // this variable has already been locked

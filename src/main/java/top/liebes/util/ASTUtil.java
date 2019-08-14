@@ -11,27 +11,31 @@ import org.eclipse.text.edits.TextEdit;
 import org.slf4j.LoggerFactory;
 import sip4j.graphstructure.E_MethodGraph;
 import sip4j.parser.AST_Parser;
+import top.liebes.ast.CombineLockVisitor;
 import top.liebes.ast.CompilationUnitASTRequestor;
+import top.liebes.entity.LockStatementInfo;
 import top.liebes.entity.Pair;
 import top.liebes.env.Env;
 
 import java.io.File;
 import java.nio.charset.Charset;
 import java.util.*;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * @author liebes
  */
 public class ASTUtil {
+    public void func(){
+        ReentrantReadWriteLock xxlock = new ReentrantReadWriteLock();
+        xxlock.readLock().lock();
+    }
+
     private static Logger logger = (Logger) LoggerFactory.getLogger(ASTUtil.class);
     static {
         logger.setLevel(Env.LOG_LEVEL);
     }
     public static Map<String, CompilationUnit> cpMap = new HashMap<>();
-
-    public final static int READ_LOCK = 1;
-    public final static int WRITE_LOCK = 2;
-    public final static int EXCLUSIVE_LOCK = 3;
 
     /**
      * Parse a file to compilation unit.
@@ -218,10 +222,8 @@ public class ASTUtil {
             }
         }
 
-
-
         switch (lockType){
-            case READ_LOCK:
+            case LockStatementInfo.READ_LOCK:
                 preStatement = getReadWriteLockExpression(lockName, true, true);
                 postStatement = getReadWriteLockExpression(lockName, true, false);
                 preStatement = (ExpressionStatement) ASTNode.copySubtree(parent.getAST(), preStatement);
@@ -231,7 +233,7 @@ public class ASTUtil {
                 block.statements().add(lastIndex + 1, postStatement);
                 block.statements().add(preIndex, preStatement);
                 break;
-            case WRITE_LOCK:
+            case LockStatementInfo.WRITE_LOCK:
                 preStatement = getReadWriteLockExpression(lockName, false, true);
                 postStatement = getReadWriteLockExpression(lockName, false, false);
                 preStatement = (ExpressionStatement) ASTNode.copySubtree(parent.getAST(), preStatement);
@@ -240,7 +242,7 @@ public class ASTUtil {
                 block.statements().add(lastIndex + 1, postStatement);
                 block.statements().add(preIndex, preStatement);
                 break;
-            case EXCLUSIVE_LOCK:
+            case LockStatementInfo.EXCLUSIVE_LOCK:
                 preStatement = getExclusiveLockExpression(lockName, true);
                 postStatement = getExclusiveLockExpression(lockName, false);
                 preStatement = (ExpressionStatement) ASTNode.copySubtree(parent.getAST(), preStatement);
@@ -271,49 +273,212 @@ public class ASTUtil {
 
         // correct the order
         lastIndex += 2;
-        for(int i = preIndex + 1; i < lastIndex; i ++){
-            if(isLockStatement((Statement) block.statements().get(i), true)){
-                Object tmp = block.statements().get(i);
-                block.statements().remove(i);
-                block.statements().add(preIndex, tmp);
-                preIndex ++;
-                i --;
+//        for(int i = preIndex + 1; i < lastIndex; i ++){
+//            if(isLockStatement((Statement) block.statements().get(i), true)){
+//                Object tmp = block.statements().get(i);
+//                block.statements().remove(i);
+//                block.statements().add(preIndex, tmp);
+//                preIndex ++;
+//                i --;
+//            }
+//        }
+//        for(int i = lastIndex - 1; i > preIndex; i --){
+//            if(isLockStatement((Statement) block.statements().get(i), false)){
+//                Object tmp = block.statements().get(i);
+//                block.statements().remove(i);
+//                block.statements().add(lastIndex, tmp);
+//                lastIndex --;
+//                i ++;
+//            }
+//        }
+
+        // remove lock if already some statements have already been locked, this may happens when adding read lock.
+        int lockIndex = -1;
+        int unLockIndex = -1;
+
+        for(int i = 0 ; i < block.statements().size(); i ++){
+            if(i == preIndex || i == lastIndex){
+                continue;
+            }
+            if(isLockStatementByName((Statement) block.statements().get(i), true, lockName)){
+                lockIndex = i;
+            }
+            if(isLockStatementByName((Statement) block.statements().get(i), false, lockName)) {
+                unLockIndex = i;
+            }
+            if(lockIndex != -1 && unLockIndex != -1){
+                int preLockType = getLockType((Statement) block.statements().get(lockIndex));
+                if(lockIndex - 1 <= preIndex && unLockIndex + 1 >= lastIndex){
+                    // var has already been locked, remove duplicated lock node
+                    block.statements().remove(lastIndex);
+                    block.statements().remove(preIndex);
+                    preIndex = lastIndex = -1;
+                    break;
+                }
+                else if (unLockIndex <= preIndex || lockIndex >= lastIndex){
+                    // no intersection
+                    if(preLockType != lockType){
+                        break;
+                    }
+                    if(unLockIndex + 1 == preIndex){
+                        block.statements().remove(preIndex);
+                        block.statements().remove(unLockIndex);
+                        i --;
+                        preIndex = lockIndex;
+                        lastIndex -= 2;
+                    }
+                    else if (lockIndex - 1 == lastIndex){
+                        block.statements().remove(lockIndex);
+                        block.statements().remove(lastIndex);
+                        i -= 2;
+                        lastIndex = unLockIndex - 2;
+                    }
+                }
+                else if (lockIndex - 1 > preIndex && unLockIndex + 1 >= lastIndex){
+                    if(lockType == preLockType){
+                        block.statements().remove(lastIndex);
+                        block.statements().remove(lockIndex);
+                        i = lastIndex = unLockIndex - 2;
+                    }
+                    else if(lockType > preLockType){
+                        ASTNode tmp = ASTNode.copySubtree(block.getAST(), (ASTNode) block.statements().get(lockIndex)) ;
+                        block.statements().remove(lockIndex);
+                        if(lastIndex + 1 == unLockIndex){
+                            block.statements().remove(unLockIndex - 1);
+                            lastIndex --;
+                        }
+                        else{
+                            block.statements().add(lastIndex + 1 - 1, tmp);
+                            lastIndex --;
+                        }
+                    }
+                    else{
+                        ASTNode tmp = ASTNode.copySubtree(block.getAST(), (ASTNode) block.statements().get(lastIndex)) ;
+                        block.statements().remove(lastIndex);
+                        block.statements().add(lockIndex, tmp);
+                        lastIndex = lockIndex;
+                    }
+                }
+                else if(lockIndex - 1 <= preIndex && unLockIndex + 1 < lastIndex){
+                    if(lockType == preLockType){
+                        block.statements().remove(unLockIndex);
+                        block.statements().remove(preIndex);
+                        lastIndex = lastIndex - 2;
+                        i -= 2;
+                    }
+                    else if (lockType > preLockType){
+                        ASTNode tmp = ASTNode.copySubtree(block.getAST(), (ASTNode) block.statements().get(lastIndex)) ;
+                        block.statements().remove(unLockIndex);
+                        block.statements().add(preIndex, tmp);
+                    }
+                    else{
+                        ASTNode tmp = ASTNode.copySubtree(block.getAST(), (ASTNode) block.statements().get(lastIndex)) ;
+                        block.statements().remove(preIndex);
+                        block.statements().add(unLockIndex + 1 - 1, tmp);
+                        i --;
+                    }
+                }
+                else if (lockIndex - 1 > preIndex && unLockIndex + 1 < lastIndex){
+                    if(lockType >= preLockType){
+                        block.statements().remove(unLockIndex);
+                        block.statements().remove(lockIndex);
+                        i -= 2;
+                    }
+                    else{
+                        // should be read lock
+                        preStatement = getReadWriteLockExpression(lockName, true, true);
+                        postStatement = getReadWriteLockExpression(lockName, true, false);
+                        preStatement = (ExpressionStatement) ASTNode.copySubtree(parent.getAST(), preStatement);
+                        postStatement = (ExpressionStatement) ASTNode.copySubtree(parent.getAST(), postStatement);
+                        block.statements().add(unLockIndex + 1, preStatement);
+                        block.statements().add(lockIndex, postStatement);
+                    }
+                }
+                lockIndex = unLockIndex = -1;
             }
         }
 
-        for(int i = lastIndex - 1; i > preIndex; i --){
-            if(isLockStatement((Statement) block.statements().get(i), false)){
-                Object tmp = block.statements().get(i);
-                block.statements().remove(i);
-                block.statements().add(lastIndex, tmp);
-                lastIndex --;
-                i ++;
-            }
+        ASTNode methodNode = block;
+        while(methodNode != null && methodNode.getNodeType() != ASTNode.METHOD_DECLARATION){
+            methodNode = methodNode.getParent();
         }
+        CombineLockVisitor clv = new CombineLockVisitor(block);
+        methodNode.accept(clv);
+        clv.optimize();
+
         return true;
     }
 
-    public static boolean isLockStatement(Statement statement, boolean isLock){
-        String lock = isLock ? "lock" : "unlock";
+    public static boolean isLockStatementByName(Statement statement, boolean isLock, String lockName){
+        LockStatementInfo lockStatementInfo = getLockInfo(statement);
+        if(lockStatementInfo == null){
+            return false;
+        }
+        return lockStatementInfo.getName().equals(lockName) && lockStatementInfo.isLock() == isLock;
+    }
+
+
+    public static int getLockType(Statement statement){
+        LockStatementInfo lockStatementInfo = getLockInfo(statement);
+        if(lockStatementInfo == null){
+            return -1;
+        }
+        return lockStatementInfo.getType();
+    }
+
+    public static LockStatementInfo getLockInfo(Statement statement){
+        String lockName;
+        int lockType;
+        boolean isLock;
         if(statement.getNodeType() == ASTNode.EXPRESSION_STATEMENT){
             ExpressionStatement es = (ExpressionStatement) statement;
             if(es.getExpression().getNodeType() == ASTNode.METHOD_INVOCATION){
                 MethodInvocation mi = (MethodInvocation) es.getExpression();
-                if(lock.equals(mi.getName().toString())){
-                    if(mi.getExpression().getNodeType() == ASTNode.METHOD_INVOCATION){
-                        MethodInvocation mi1 = (MethodInvocation) mi.getExpression();
-                        if("readLock".equals(mi1.getName().toString()) || "writeLock".equals(mi1.getName().toString())){
-                            return true;
-                        }
-                    }
-                    else if (mi.getExpression().getNodeType() == ASTNode.SIMPLE_NAME){
-                        if(mi.getExpression().toString().endsWith("lock")
-                                || mi.getExpression().toString().endsWith("Lock")
-                        ){
-                            return true;
-                        }
-                    }
+                if("lock".equals(mi.getName().toString())){
+                    isLock = true;
                 }
+                else if ("unlock".equals(mi.getName().toString())){
+                    isLock = false;
+                }
+                else{
+                    return null;
+                }
+                if(mi.getExpression().getNodeType() == ASTNode.METHOD_INVOCATION){
+                    MethodInvocation mi1 = (MethodInvocation) mi.getExpression();
+                    lockName = mi1.getExpression().toString();
+                    if("readLock".equals(mi1.getName().toString())){
+                        lockType = LockStatementInfo.READ_LOCK;
+                    }
+                    else if ("writeLock".equals(mi1.getName().toString())){
+                        lockType = LockStatementInfo.WRITE_LOCK;
+                    }
+                    else{
+                        return null;
+                    }
+                    return new LockStatementInfo(lockType, lockName, isLock);
+                }
+            }
+        }
+        return null;
+    }
+
+    public static boolean isLockStatement(Statement statement, boolean isLock){
+        LockStatementInfo lockStatementInfo = getLockInfo(statement);
+        if(lockStatementInfo == null){
+            return false;
+        }
+        return lockStatementInfo.isLock() == isLock;
+    }
+
+    public static boolean isLockPair(Statement statement1, Statement statement2){
+        LockStatementInfo info1 = getLockInfo(statement1);
+        LockStatementInfo info2 = getLockInfo(statement2);
+        if(info1 != null && info2 != null){
+            if(info1.getName().equals(info2.getName())
+                    && info1.getType() == info2.getType()
+                    && ((info1.isLock() && !info2.isLock()) || (!info1.isLock() && info2.isLock()))
+            ){
+                return true;
             }
         }
         return false;
@@ -433,14 +598,14 @@ public class ASTUtil {
         }
         else if ("pure".equals(permissionPair.getV1() )){
             // add read lock
-            ASTUtil.surroundedByLock(parentPair, ASTUtil.READ_LOCK, lockName);
+            ASTUtil.surroundedByLock(parentPair, LockStatementInfo.READ_LOCK, lockName);
         }
         else if (
                 "share".equals(permissionPair.getV1())
-                || "full".equals(permissionPair.getV1())
-                || "unique".equals(permissionPair.getV1())
+                        || "full".equals(permissionPair.getV1())
+                        || "unique".equals(permissionPair.getV1())
         ){
-            ASTUtil.surroundedByLock(parentPair, ASTUtil.WRITE_LOCK, lockName);
+            ASTUtil.surroundedByLock(parentPair, LockStatementInfo.WRITE_LOCK, lockName);
             // add write lock
         }
     }

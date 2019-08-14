@@ -118,21 +118,28 @@ public class GraphUtil {
      * @param jFile
      * @return
      */
-    public static Map<String, String> getLockForVar(JFile jFile){
+    public static Map<String, String> getLockForVar(JFile jFile, Map<String, Set<String>> includedVars){
         Map<String, String> reMap = new HashMap<>();
         for(E_ClassGraphs classGraph : jFile.getClassGraphs()){
             for(E_MethodGraph methodGraph : classGraph.getMethodgraphs()){
+                String classname = classGraph.getClassGraphName();
+                String methodName = classname + "." + ASTUtil.getUniquelyIdentifiers(methodGraph);
                 List<String> list = new ArrayList<>();
                 for(E_MVertice vertex : methodGraph.getVertices()){
-                    if("foo".equals(vertex.getVName()) || "context".equals(vertex.getVName()) || ! vertex.isField()){
+                    if("foo".equals(vertex.getVName())
+                            || "context".equals(vertex.getVName())
+                            || ! vertex.isField()
+                    ){
                         continue;
                     }
-                    if(
-                            "share".equals(vertex.getPre_permissions())
-                                    || "unique".equals(vertex.getPre_permissions())
-                                    || "full".equals(vertex.getPre_permissions())
-                    ){
-                        list.add(classGraph.getClassGraphName() + "." + vertex.getVName());
+                    if(includedVars.containsKey(methodName) && includedVars.get(methodName).contains(vertex.getVName())){
+                        if(
+                                "share".equals(vertex.getPre_permissions())
+                                        || "unique".equals(vertex.getPre_permissions())
+                                        || "full".equals(vertex.getPre_permissions())
+                        ){
+                            list.add(classname + "." + vertex.getVName());
+                        }
                     }
                 }
                 if(list.size() > 0){
