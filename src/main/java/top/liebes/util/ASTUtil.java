@@ -20,17 +20,11 @@ import top.liebes.env.Env;
 import java.io.File;
 import java.nio.charset.Charset;
 import java.util.*;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * @author liebes
  */
 public class ASTUtil {
-    public void func(){
-        ReentrantReadWriteLock xxlock = new ReentrantReadWriteLock();
-        xxlock.readLock().lock();
-    }
-
     private static Logger logger = (Logger) LoggerFactory.getLogger(ASTUtil.class);
     static {
         logger.setLevel(Env.LOG_LEVEL);
@@ -539,6 +533,9 @@ public class ASTUtil {
             list.add(parameter.toString().trim());
         }
         String s = String.join(", ", list);
+        if(node.resolveBinding() == null){
+            return "wrongClassBinding";
+        }
         String modifier = AST_Parser.setMethodModifier(node.resolveBinding()).trim();
         String returnType = "";
         if (! node.isConstructor()) {

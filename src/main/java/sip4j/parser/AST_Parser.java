@@ -1343,6 +1343,9 @@ public class AST_Parser {
 						.resolveBinding();
 				// fetch field information
 				String fName = qf.getName().toString();
+				if(bq == null){
+					continue;
+				}
 				ITypeBinding typebinding = bq.getType();
 				String fType = typebinding.getQualifiedName().toString();
 				if(typebinding.isParameterizedType()){
@@ -1373,7 +1376,7 @@ public class AST_Parser {
 				ArrayAccess array = (ArrayAccess) exp;
 				Expression arrayExp = array.getArray();
 				IVariableBinding arrayBind = getVariableBinding(arrayExp);
-				String fName = arrayBind.getName().toString();
+				String fName = arrayBind.getName();
 				String fType = "";
 				ITypeBinding typebinding = array.resolveTypeBinding();
 				fType = typebinding.getQualifiedName();
@@ -1642,8 +1645,8 @@ public class AST_Parser {
 			QualifiedName qf = (QualifiedName) exp;
 			IVariableBinding bq = (IVariableBinding) qf.resolveBinding();
 			if(bq == null){
-				System.err.println("error found");
-				System.err.println(qf);
+//				System.err.println("error found");
+//				System.err.println(qf);
 				return;
 			}
 			// fetch field information
@@ -4433,6 +4436,9 @@ else{
 				if(raExp.getNodeType() == ASTNode.CLASS_INSTANCE_CREATION){
 					ClassInstanceCreation m = (ClassInstanceCreation) raExp;
 					IMethodBinding  smb = m.resolveConstructorBinding();
+					if(smb == null){
+						return;
+					}
 					if(smb.getDeclaringClass().isParameterizedType()){
 						smb = smb.getMethodDeclaration();
 					}
