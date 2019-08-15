@@ -14,6 +14,7 @@ import top.liebes.entity.Pair;
 import top.liebes.env.Env;
 import top.liebes.util.ASTUtil;
 import top.liebes.util.ExperimentUtil;
+import top.liebes.util.FileUtil;
 
 import java.io.*;
 import java.util.*;
@@ -56,6 +57,19 @@ public class Main  {
 		}
 		logger.setLevel(Env.LOG_LEVEL);
 		logger.info("start to handle folder : " + Env.SOURCE_FOLDER);
+
+		File file = new File(Env.SOURCE_FOLDER + "/" + "lib");
+		if(file.exists() && file.isDirectory()){
+			List<String> arr = new ArrayList<>(Arrays.asList(Env.CLASSPATH));
+			for(File jar : file.listFiles()){
+				if("jar".equals(FileUtil.getSuffix(jar.getName()))){
+					arr.add(jar.getAbsolutePath());
+				}
+			}
+			Env.CLASSPATH =  arr.toArray(new String[arr.size()]);
+			logger.info("CLASSPATH SET : " + arr);
+		}
+
 		new Main().doThat(Env.SOURCE_FOLDER);
 		ExperimentUtil.print();
 	}

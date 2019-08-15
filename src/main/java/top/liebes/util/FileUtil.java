@@ -50,6 +50,10 @@ public class FileUtil {
     public static List<File> getFiles(File folder, String[] suffix){
         List<File> res = new ArrayList<>();
         if(folder.isDirectory()){
+            // ignore test folder
+            if("test".equals(folder.getName())){
+                return new ArrayList<>();
+            }
             File[] files = folder.listFiles();
             if(files != null){
                 for(File file : files){

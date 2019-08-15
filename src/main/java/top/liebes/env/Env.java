@@ -10,10 +10,10 @@ public class Env {
     public static String SOURCE_FOLDER =
 //            "/Users/liebes/project/laboratory/Sip4J/benchmarks/src/aeminium/fibonacci";
 //            "/Users/liebes/project/laboratory/Sip4J/benchmarks/src/working_examples";
-            "/Users/liebes/project/laboratory/Sip4J/benchmarks/src/pldi/NullAppender/src/java";
+            "/Users/liebes/project/laboratory/Sip4J/benchmarks/src/pldi/FileAppender";
 //            "/Users/liebes/project/laboratory/Sip4J/benchmarks/src/aeminium/blackscholes";
 
-    public final static String[] CLASSPATH = {
+    public static String[] CLASSPATH = {
             "/Library/Java/JavaVirtualMachines/jdk1.8.0_192.jdk/Contents/Home/jre/lib/rt.jar",
             ".",
             "/Library/Java/JavaVirtualMachines/jdk1.8.0_192.jdk/Contents/Home/lib/dt.jar",
@@ -27,7 +27,7 @@ public class Env {
 //            "/Users/liebes/project/laboratory/Sip4J/benchmarks/src/pldi2012/jfreechart-0.9.8/lib/jcommon-0.8.0.jar",
 //            "/Users/liebes/project/laboratory/Sip4J/benchmarks/src/pldi2012/jfreechart-0.9.8/lib/servlet.jar",
 //            "/Users/liebes/project/laboratory/Sip4J/benchmarks/src/pldi2012/jfreechart-0.9.8/jfreechart-0.9.8.jar",
-            "/Users/liebes/project/laboratory/Sip4J/benchmarks/src/pldi/AppenderAttachableImpl/lib/log4j3.jar",
+//            "/Users/liebes/project/laboratory/Sip4J/benchmarks/src/pldi/AppenderAttachableImpl/lib/log4j3.jar",
     };
 
     public final static String TARGET_FOLDER =
