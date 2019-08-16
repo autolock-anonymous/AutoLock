@@ -61,21 +61,19 @@ public class ExperimentUtil {
             cu.accept(vistor);
         }
 
-        System.out.println("total analysis : ");
-        System.out.println("class : " + (vistor.getNumberOfClass() - 1));
-        System.out.println("method: " + (vistor.getNumberOfMethod() - 1));
-        System.out.println("lock : " + vistor.getNumberOfLock());
+        System.out.println((vistor.getNumberOfClass() - 1)  + "\t" + (vistor.getNumberOfMethod() - 1) + "\t" + vistor.getNumberOfLock());
     }
 
     public static void print(){
-        for(Map.Entry<String, Integer[]> entry : map.entrySet()){
-            System.out.println("class " + entry.getKey()
-                    + "\t" + "Pure " + entry.getValue()[1]
-                    + "\t" + "Share : " + entry.getValue()[2]
-                    + "\t" + "Full " + entry.getValue()[3]
-                    + "\t" + "Unique " + entry.getValue()[4]
-            );
-        }
         calClassInfo();
+        int a[] = new int[5];
+        for(Map.Entry<String, Integer[]> entry : map.entrySet()){
+            a[1] += entry.getValue()[1];
+            a[2] += entry.getValue()[2];
+            a[3] += entry.getValue()[3];
+            a[4] += entry.getValue()[4];
+        }
+        System.out.println(a[1] + "\t" + a[2] + "\t" +a[3] + "\t" +a[4]);
+
     }
 }

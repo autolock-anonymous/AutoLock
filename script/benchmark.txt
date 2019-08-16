@@ -1,6 +1,5 @@
 /Users/liebes/project/laboratory/Sip4J/benchmarks/src/pldi/AppenderAttachableImpl
 /Users/liebes/project/laboratory/Sip4J/benchmarks/src/pldi/BufferedInputStream
-/Users/liebes/project/laboratory/Sip4J/benchmarks/src/pldi/Day
 /Users/liebes/project/laboratory/Sip4J/benchmarks/src/pldi/FileAppender
 /Users/liebes/project/laboratory/Sip4J/benchmarks/src/pldi/HashTable
 /Users/liebes/project/laboratory/Sip4J/benchmarks/src/pldi/NullAppender
@@ -11,3 +10,13 @@
 /Users/liebes/project/laboratory/Sip4J/benchmarks/src/pldi/Vector117
 /Users/liebes/project/laboratory/Sip4J/benchmarks/src/pldi/Vector142
 /Users/liebes/project/laboratory/Sip4J/benchmarks/src/pldi/XYSeries
+/Users/liebes/project/laboratory/Sip4J/benchmarks/src/util/arraylist
+/Users/liebes/project/laboratory/Sip4J/benchmarks/src/util/bitset
+/Users/liebes/project/laboratory/Sip4J/benchmarks/src/util/hashmap
+/Users/liebes/project/laboratory/Sip4J/benchmarks/src/util/hashtable
+/Users/liebes/project/laboratory/Sip4J/benchmarks/src/util/identityhashmap
+/Users/liebes/project/laboratory/Sip4J/benchmarks/src/util/linkedhashmap
+/Users/liebes/project/laboratory/Sip4J/benchmarks/src/util/linkedlist
+/Users/liebes/project/laboratory/Sip4J/benchmarks/src/util/random
+/Users/liebes/project/laboratory/Sip4J/benchmarks/src/util/treemap
+/Users/liebes/project/laboratory/Sip4J/benchmarks/src/util/vector

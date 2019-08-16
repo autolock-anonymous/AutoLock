@@ -110,9 +110,7 @@ public class LockingPolicyController {
                 String methodName = "{" + tmp[1] + "}";
                 String varName = tmp[2];
                 String lockName = varLockMap.getOrDefault(className + "." + varName, varName + "Lock");
-
                 Set<ASTNode> nodeSet = entry.getValue();
-
                 Pair<String, String> permissionPair = permissionMap.get(s);
                 if(permissionPair == null){
                     logger.debug(s + " has no permission");
@@ -149,35 +147,62 @@ public class LockingPolicyController {
 
             // add all unlock statement to finally block
             cu.accept(new ASTVisitor() {
-                private Block currentVisitedFinallyBlock = null;
                 @Override
-                public boolean visit(MethodDeclaration node) {
-                    currentVisitedFinallyBlock = node.getAST().newBlock();
-                    return super.visit(node);
-                }
-
-                @Override
-                public void endVisit(MethodDeclaration node) {
-                    if(currentVisitedFinallyBlock != null && currentVisitedFinallyBlock.statements().size() > 0){
-                        TryStatement tryStatement = (TryStatement) ASTNode.copySubtree(node.getAST(), node.getAST().newTryStatement());
-                        tryStatement.setBody((Block) ASTNode.copySubtree(node.getAST(), node.getBody()));
-                        tryStatement.setFinally(currentVisitedFinallyBlock);
-                        node.getBody().statements().clear();
-                        node.getBody().statements().add(ASTNode.copySubtree(node.getAST(), tryStatement));
-                    }
-                    currentVisitedFinallyBlock = null;
-                    super.endVisit(node);
-                }
-
-                @Override
-                public boolean visit(ExpressionStatement node) {
-                    if(currentVisitedFinallyBlock != null){
-                        if(ASTUtil.isLockStatement(node, false)){
-                            currentVisitedFinallyBlock.statements().add(ASTNode.copySubtree(currentVisitedFinallyBlock.getAST(),node));
-                            node.delete();
+                public void endVisit(Block node) {
+                    Stack<Statement> tmpStack = new Stack<>();
+                    Stack<Integer> idxStack = new Stack<>();
+                    for(int i = 0; i < node.statements().size(); i ++){
+                        Statement st = (Statement)node.statements().get(i);
+                        if(ASTUtil.isLockStatement(st, true)){
+                            tmpStack.push(st);
+                            idxStack.push(i);
+                        }
+                        else if(ASTUtil.isLockStatement(st, false)){
+                            for(int j = i + 1; j < node.statements().size(); j ++){
+                                if(ASTUtil.isLockStatement((Statement)node.statements().get(j), false)){
+                                    st = (Statement) node.statements().get(j);
+                                    idxStack.pop();
+                                    i ++;
+                                }
+                                else{
+                                    break;
+                                }
+                            }
+                            Statement top = tmpStack.pop();
+                            boolean flag = false;
+                            while(!tmpStack.isEmpty() && !ASTUtil.isLockPair(top, st)){
+                                if(top.getNodeType() == ASTNode.RETURN_STATEMENT){
+                                    flag = true;
+                                }
+                                top = tmpStack.pop();
+                            }
+                            int lockIdx = idxStack.pop();
+                            if(flag){
+                                TryStatement tryStatement = node.getAST().newTryStatement();
+                                Block block = tryStatement.getAST().newBlock();
+                                Block finallyBlock = tryStatement.getAST().newBlock();
+                                for(int j = lockIdx; j <= i ; ){
+                                    if(ASTUtil.isLockStatement((Statement) node.statements().get(j), false)){
+                                        finallyBlock.statements().add(ASTNode.copySubtree(finallyBlock.getAST(), (ASTNode) node.statements().get(j)));
+                                    }
+                                    else{
+                                        block.statements().add(ASTNode.copySubtree(block.getAST(), (ASTNode) node.statements().get(j)));
+                                    }
+                                    node.statements().remove(j);
+                                    i --;
+                                }
+                                tryStatement.setBody(block);
+                                tryStatement.setFinally((Block)ASTNode.copySubtree(tryStatement.getAST(), finallyBlock));
+                                node.statements().add(i + 1, ASTNode.copySubtree(node.getAST(), tryStatement));
+                            }
+                        }
+                        else{
+                            if(tmpStack.size() > 0){
+                                tmpStack.push(st);
+                            }
                         }
                     }
-                    return super.visit(node);
+                    super.endVisit(node);
                 }
             });
 

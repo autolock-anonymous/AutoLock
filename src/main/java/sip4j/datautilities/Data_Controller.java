@@ -735,7 +735,7 @@ public class Data_Controller {
 					if(a.getFieldAlias().isEmpty() == false){
 						fAliases = a.getFieldAlias();
 						for(E_MRefField r : fAliases){
-							displayField(r);
+//							displayField(r);
 							fieldAliases.add(r);
 							LinkedList<E_MRefAlias> rAliases  = Data_Controller.fetchAliasesOfRefField(r);
 							if(rAliases!=null && rAliases.isEmpty() == false){
@@ -760,7 +760,7 @@ public class Data_Controller {
 				if(a.getParamAlias() != null && a.getParamAlias().isEmpty() == false){
 					pAliases = a.getParamAlias();
 					for(E_MRefParameter p : pAliases){
-						displayParamter(p);
+//						displayParamter(p);
 						paramAliases.add(p);
 						LinkedList<E_MRefAlias> ppAliases  = Data_Controller.fetchAliasesOfParams(p);
 						LinkedList<E_MRefField> fieldAliases = new LinkedList<E_MRefField>();
