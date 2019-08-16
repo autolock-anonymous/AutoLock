@@ -10,6 +10,7 @@ import top.liebes.entity.LockStatementInfo;
 import top.liebes.env.Env;
 import top.liebes.util.ASTUtil;
 
+import java.util.Iterator;
 import java.util.Stack;
 
 public class CombineLockVisitor extends ASTVisitor {
@@ -50,24 +51,29 @@ public class CombineLockVisitor extends ASTVisitor {
             ExpressionStatement second = visitedLockEStack.pop();
             if(ASTUtil.isLockPair(first, second)){
                 if(! localStack.empty()){
-                    ExpressionStatement parentLockStatement = localStack.pop();
-                    LockStatementInfo pinfo = ASTUtil.getLockInfo(parentLockStatement);
-                    LockStatementInfo info = ASTUtil.getLockInfo(first);
-                    if(pinfo == null || info == null){
-                        logger.error("node is not lock statement");
-                    }
-                    if(pinfo.isWriteLock() || (pinfo.isReadLock() && info.isReadLock())){
-                        Block block = (Block) first.getParent();
-                        for(int i = block.statements().size() - 1; i >= 0; i --){
-                            if(first.equals(block.statements().get(i))){
-                                block.statements().remove(i);
-                            }
-                            else if(second.equals(block.statements().get(i))){
-                                block.statements().remove(i);
+                    for(ExpressionStatement parentLockStatement : localStack){
+                        LockStatementInfo pinfo = ASTUtil.getLockInfo(parentLockStatement);
+                        LockStatementInfo info = ASTUtil.getLockInfo(first);
+                        if(pinfo != null && info != null){
+                            // compare lock name
+                            if(pinfo.getName().equals(info.getName())){
+                                // compare lock type, write lock > read lock
+                                if(pinfo.isWriteLock() || (pinfo.isReadLock() && info.isReadLock())){
+                                    Block block = (Block) first.getParent();
+                                    for(int i = block.statements().size() - 1; i >= 0; i --){
+                                        if(first.equals(block.statements().get(i))){
+                                            block.statements().remove(i);
+                                        }
+                                        else if(second.equals(block.statements().get(i))){
+                                            block.statements().remove(i);
+                                        }
+                                    }
+                                    break;
+                                }
                             }
                         }
                     }
-                    visitedLockEStack.push(parentLockStatement);
+                    visitedLockEStack.push(localStack.pop());
                 }
             }
             else{

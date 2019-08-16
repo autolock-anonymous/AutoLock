@@ -147,13 +147,47 @@ public class LockingPolicyController {
                 ASTUtil.addLock(permissionPair, parentPair, lockName);
             }
 
+            // add all unlock statement to finally block
+            cu.accept(new ASTVisitor() {
+                private Block currentVisitedFinallyBlock = null;
+                @Override
+                public boolean visit(MethodDeclaration node) {
+                    currentVisitedFinallyBlock = node.getAST().newBlock();
+                    return super.visit(node);
+                }
+
+                @Override
+                public void endVisit(MethodDeclaration node) {
+                    if(currentVisitedFinallyBlock != null && currentVisitedFinallyBlock.statements().size() > 0){
+                        TryStatement tryStatement = (TryStatement) ASTNode.copySubtree(node.getAST(), node.getAST().newTryStatement());
+                        tryStatement.setBody((Block) ASTNode.copySubtree(node.getAST(), node.getBody()));
+                        tryStatement.setFinally(currentVisitedFinallyBlock);
+                        node.getBody().statements().clear();
+                        node.getBody().statements().add(ASTNode.copySubtree(node.getAST(), tryStatement));
+                    }
+                    currentVisitedFinallyBlock = null;
+                    super.endVisit(node);
+                }
+
+                @Override
+                public boolean visit(ExpressionStatement node) {
+                    if(currentVisitedFinallyBlock != null){
+                        if(ASTUtil.isLockStatement(node, false)){
+                            currentVisitedFinallyBlock.statements().add(ASTNode.copySubtree(currentVisitedFinallyBlock.getAST(),node));
+                            node.delete();
+                        }
+                    }
+                    return super.visit(node);
+                }
+            });
+
             // write result to file
             String folderName = permissionVisitor.getPackageName().replace(".", "/");
             String targetFilePath = Env.TARGET_FOLDER + "/" + folderName + "/" + file.getName();
             FileUtil.writeToFile(targetFilePath, ASTUtil.format(cu.toString()));
-
 //            PdfUtil.generatePdfFile(Env.TARGET_FOLDER + "/pdf/" + folderName + "/" + FileUtil.removeSuffix(file.getName()) + ".pdf", cu.toString());
         }
+
     }
 
 }

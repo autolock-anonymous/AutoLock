@@ -1,12 +1,17 @@
 package top.liebes.util;
 
 import ch.qos.logback.classic.Logger;
+import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.slf4j.LoggerFactory;
+import top.liebes.ast.ExperimentVisitor;
+import top.liebes.controller.JFileController;
+import top.liebes.entity.JFile;
 import top.liebes.env.Env;
 
+import java.io.File;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class ExperimentUtil {
     public static Map<String, Integer[]> map = new HashMap<>();
@@ -43,6 +48,25 @@ public class ExperimentUtil {
         });
     }
 
+    public static void calClassInfo(){
+        String folder = Env.SOURCE_FOLDER;
+        File root = new File(folder);
+        List<File> files = FileUtil.getFiles(root, new String[]{"java"});
+
+        // Read java files from folder
+        ExperimentVisitor vistor = new ExperimentVisitor();
+        for(File file : files){
+            JFile jFile = JFileController.get(file.getName());
+            final CompilationUnit cu = ASTUtil.getCompilationUnit(file, null);
+            cu.accept(vistor);
+        }
+
+        System.out.println("total analysis : ");
+        System.out.println("class : " + (vistor.getNumberOfClass() - 1));
+        System.out.println("method: " + (vistor.getNumberOfMethod() - 1));
+        System.out.println("lock : " + vistor.getNumberOfLock());
+    }
+
     public static void print(){
         for(Map.Entry<String, Integer[]> entry : map.entrySet()){
             System.out.println("class " + entry.getKey()
@@ -52,5 +76,6 @@ public class ExperimentUtil {
                     + "\t" + "Unique " + entry.getValue()[4]
             );
         }
+        calClassInfo();
     }
 }

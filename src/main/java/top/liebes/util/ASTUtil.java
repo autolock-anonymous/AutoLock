@@ -267,24 +267,26 @@ public class ASTUtil {
 
         // correct the order
         lastIndex += 2;
-//        for(int i = preIndex + 1; i < lastIndex; i ++){
-//            if(isLockStatement((Statement) block.statements().get(i), true)){
-//                Object tmp = block.statements().get(i);
-//                block.statements().remove(i);
-//                block.statements().add(preIndex, tmp);
-//                preIndex ++;
-//                i --;
-//            }
-//        }
-//        for(int i = lastIndex - 1; i > preIndex; i --){
-//            if(isLockStatement((Statement) block.statements().get(i), false)){
-//                Object tmp = block.statements().get(i);
-//                block.statements().remove(i);
-//                block.statements().add(lastIndex, tmp);
-//                lastIndex --;
-//                i ++;
-//            }
-//        }
+        for(int i = preIndex + 1; i < lastIndex; i ++){
+            LockStatementInfo lockInfo = ASTUtil.getLockInfo((Statement) block.statements().get(i));
+            if(lockInfo != null && lockInfo.isLock() && ! lockInfo.getName().equals(lockName)){
+                Object tmp = block.statements().get(i);
+                block.statements().remove(i);
+                block.statements().add(preIndex, tmp);
+                preIndex ++;
+                i --;
+            }
+        }
+        for(int i = lastIndex - 1; i > preIndex; i --){
+            LockStatementInfo lockInfo = ASTUtil.getLockInfo((Statement) block.statements().get(i));
+            if(lockInfo != null && ! lockInfo.isLock() && ! lockInfo.getName().equals(lockName)){
+                Object tmp = block.statements().get(i);
+                block.statements().remove(i);
+                block.statements().add(lastIndex, tmp);
+                lastIndex --;
+                i ++;
+            }
+        }
 
         // remove lock if already some statements have already been locked, this may happens when adding read lock.
         int lockIndex = -1;
@@ -462,6 +464,11 @@ public class ASTUtil {
             return false;
         }
         return lockStatementInfo.isLock() == isLock;
+    }
+
+    public static boolean isLockStatement(Statement statement){
+        LockStatementInfo lockStatementInfo = getLockInfo(statement);
+        return lockStatementInfo != null;
     }
 
     public static boolean isLockPair(Statement statement1, Statement statement2){
