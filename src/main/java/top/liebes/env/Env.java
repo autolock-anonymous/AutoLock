@@ -8,9 +8,9 @@ import org.eclipse.jdt.core.dom.AST;
  */
 public class Env {
     public static String SOURCE_FOLDER =
-            "/Users/liebes/project/laboratory/Sip4J/benchmarks/src/util/linkedlist";
+//            "/Users/liebes/project/laboratory/Sip4J/benchmarks/src/util/linkedlist";
 //            "/Users/liebes/project/laboratory/Sip4J/benchmarks/src/working_examples";
-//            "/Users/liebes/project/laboratory/Sip4J/benchmarks/src/pldi/SharedPoolDataSource";
+            "/Users/liebes/project/laboratory/Sip4J/benchmarks/src/pldi/HashTable";
 //            "/Users/liebes/project/laboratory/Sip4J/benchmarks/src/aeminium/blackscholes";
 
     public static String[] CLASSPATH = {
