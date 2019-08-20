@@ -109,7 +109,7 @@ public class GraphUtil {
     public static class MapKeyComparator implements Comparator<String>{
         @Override
         public int compare(String s1, String s2){
-            return s1.compareTo(s2);
+            return System.identityHashCode(s1) - System.identityHashCode(s2);
         }
     }
 

@@ -51,7 +51,7 @@ public class FileUtil {
         List<File> res = new ArrayList<>();
         if(folder.isDirectory()){
             // ignore test folder
-            if("test".equals(folder.getName())){
+            if("test".equals(folder.getName()) || "withlock".equals(folder.getName()) || folder.getName().endsWith("test")){
                 return new ArrayList<>();
             }
             File[] files = folder.listFiles();

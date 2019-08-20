@@ -6,9 +6,12 @@ import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 import sip4j.parser.AST_Parser;
 import sip4j.parser.GlobalVariables;
 import sip4j.datastructure.*;
+import top.liebes.util.ASTUtil;
+import top.liebes.util.StringUtil;
 
 public class Data_Controller {
 	public static void showData(){
@@ -560,16 +563,20 @@ public class Data_Controller {
 		return method;
 	}
 	public static E_Method searchMethod(IMethodBinding bind){
+
 		E_Method method = null;
 		LinkedList<E_Method> _methds = fetchAllMethods();
 		if(_methds != null){
 			for (E_Method m:_methds){
 				// if(m.equals(o))
-				if(bind.getName().toString().equals(m.getName().toString())
-						&& bind.getDeclaringClass().getQualifiedName().toString().equals(m.getDeclClassQName())
+				if(bind.getName().equals(m.getName())
+						&& bind.getDeclaringClass().getQualifiedName().equals(m.getDeclClassQName()
+				)
 				){
-					method = m;
-					break;
+//					if(StringUtil.compare(ASTUtil.getParametersTypeString(bind), ASTUtil.getParametersTypeString(m))){
+						method = m;
+						break;
+//					}
 				}
 			}
 		}

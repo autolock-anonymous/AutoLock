@@ -3,6 +3,9 @@ package top.liebes.main;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import org.slf4j.LoggerFactory;
+import sip4j.datastructure.E_Class;
+import sip4j.datastructure.E_Method;
+import sip4j.datautilities.Data_Controller;
 import sip4j.datautilities.Data_Generator;
 import sip4j.graphutilities.Graph_Controller;
 import org.eclipse.jdt.core.dom.CompilationUnit;
@@ -95,7 +98,6 @@ public class Main  {
 
 		AST_Parser.extractContextInformation();
 		logger.info("sip4j meta-data extraction is done");
-
 		try{
 			Graph_Controller.createGraph();
 		} catch(IOException e) {

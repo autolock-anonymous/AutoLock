@@ -9,6 +9,7 @@ import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.text.edits.TextEdit;
 import org.slf4j.LoggerFactory;
+import sip4j.datastructure.E_Method;
 import sip4j.graphstructure.E_MethodGraph;
 import sip4j.parser.AST_Parser;
 import top.liebes.ast.CombineLockVisitor;
@@ -261,7 +262,7 @@ public class ASTUtil {
     //                }
     //                break;
                 default:
-                    logger.debug("wrong type of lock");
+                    logger.error("wrong type of lock");
                     return false;
             }
 
@@ -288,7 +289,7 @@ public class ASTUtil {
                     }
                     return 1;
                 }
-                return info1.getName().compareTo(info2.getName());
+                return System.identityHashCode(info1.getName()) - System.identityHashCode(info2.getName());
             });
 
             for(int i = 0; i + 1 < sortList.size(); i += 2){
@@ -686,11 +687,44 @@ public class ASTUtil {
         }
     }
 
-    public static ImportDeclaration getImporDeclaration(String importName){
+    public static ImportDeclaration getImportDeclaration(String importName){
         ASTParser parser = ASTParser.newParser(Env.JAVA_VERSION);
         parser.setKind(ASTParser.K_COMPILATION_UNIT);
         parser.setSource(("import " + importName + ";").toCharArray());
         CompilationUnit node = (CompilationUnit)parser.createAST(null);
         return (ImportDeclaration) node.imports().get(0);
+    }
+
+    public static PackageDeclaration getPackageDeclaration(String packageName){
+        ASTParser parser = ASTParser.newParser(Env.JAVA_VERSION);
+        parser.setKind(ASTParser.K_COMPILATION_UNIT);
+        parser.setSource(("package " + packageName + ";").toCharArray());
+        CompilationUnit node = (CompilationUnit)parser.createAST(null);
+        return node.getPackage();
+    }
+
+    public static String[] getParametersTypeString(IMethodBinding binding){
+        if(binding == null || binding.getParameterTypes() == null){
+            return new String[0];
+        }
+        String[] res = new String[binding.getParameterTypes().length];
+        for(int i = 0; i < binding.getParameterTypes().length; i ++){
+            res[i] = binding.getParameterTypes()[i].getName();
+        }
+        return res;
+    }
+
+    public static String[] getParametersTypeString(E_Method method){
+        if(method == null || method.getMethodSignatures() == null){
+            return new String[0];
+        }
+        String qName = method.getMethodSignatures();
+        qName =  qName.substring(qName.indexOf("(") + 1, qName.indexOf(")"));
+        String[] tmp = qName.split(",");
+        String[] res = new String[tmp.length];
+        for(int i = 0; i < res.length; i ++){
+            res[i] = tmp[i].trim().split("\\s")[0].trim();
+        }
+        return res;
     }
 }

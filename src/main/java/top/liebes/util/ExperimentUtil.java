@@ -55,13 +55,19 @@ public class ExperimentUtil {
 
         // Read java files from folder
         ExperimentVisitor vistor = new ExperimentVisitor();
+        int pre = 0;
+        int preDecl = 0;
         for(File file : files){
             JFile jFile = JFileController.get(file.getName());
+            System.out.println(file.getName());
             final CompilationUnit cu = ASTUtil.getCompilationUnit(file, null);
             cu.accept(vistor);
+            System.out.println((vistor.getNumberOfLockDecl() - preDecl) + " , " + (vistor.getNumberOfLock() - pre));
+            pre = vistor.getNumberOfLock();
+            preDecl = vistor.getNumberOfLockDecl();
         }
 
-        System.out.println((vistor.getNumberOfClass() - 1)  + "\t" + (vistor.getNumberOfMethod() - 1) + "\t" + vistor.getNumberOfLock());
+        System.out.println((vistor.getNumberOfClass() - 1)  + "\t" + (vistor.getNumberOfMethod() - 1) + "\t" + vistor.getNumberOfLockDecl() + "\t" + vistor.getNumberOfLock());
     }
 
     public static void print(){

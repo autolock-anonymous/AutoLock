@@ -9,10 +9,12 @@ import top.liebes.entity.JFile;
 import top.liebes.entity.LockStatementInfo;
 import top.liebes.entity.Pair;
 import top.liebes.env.Env;
-import top.liebes.util.*;
+import top.liebes.util.ASTUtil;
+import top.liebes.util.ExperimentUtil;
+import top.liebes.util.FileUtil;
+import top.liebes.util.GraphUtil;
 
 import java.io.File;
-import java.lang.management.LockInfo;
 import java.util.*;
 
 public class LockingPolicyController {
@@ -212,7 +214,9 @@ public class LockingPolicyController {
 
                             tryStatement.setBody(tryBlock);
                             tryStatement.setFinally(finallyBlock);
-
+                            for(int k = 0; k < unlockList.size(); k ++){
+                                unlockList.get(k).delete();
+                            }
                             for(int i = 0; i < block.statements().size(); i ++){
                                 if(block.statements().get(i) == lockStatement){
                                     for(int j = i; j < block.statements().size(); j ++){
@@ -223,9 +227,6 @@ public class LockingPolicyController {
                                             finallyBlock.statements().add(ASTNode.copySubtree(finallyBlock.getAST(), unLockStatement));
                                             block.statements().remove(j);
                                             block.statements().add(j, ASTNode.copySubtree(block.getAST(), tryStatement));
-                                            for(int k = 0; k < unlockList.size(); k ++){
-                                                unlockList.get(k).delete();
-                                            }
                                             unlockList.clear();
                                             j --;
                                             break;
@@ -390,10 +391,26 @@ public class LockingPolicyController {
 
             });
 
+            cu.accept(new ASTVisitor() {
+                @Override
+                public boolean visit(Block node) {
+                    for(int i = 0; i < node.statements().size() - 1; i ++){
+                        if(ASTUtil.isLockPair((Statement)node.statements().get(i), (Statement) node.statements().get(i + 1))){
+                            node.statements().remove(i + 1);
+                            node.statements().remove(i);
+                            i --;
+                        }
+                    }
+                    return super.visit(node);
+                }
+            });
+
             // write result to file
-            String folderName = permissionVisitor.getPackageName().replace(".", "/");
-            String targetFilePath = Env.TARGET_FOLDER + "/" + folderName + "/" + file.getName();
-            FileUtil.writeToFile(targetFilePath, ASTUtil.format(cu.toString()));
+            String filename = file.getAbsolutePath();
+            filename = filename.replace("/entity/", "/entity/withlock/");
+//            String folderName = permissionVisitor.getPackageName().replace(".", "/");
+//            String targetFilePath = Env.TARGET_FOLDER + "/" + folderName + "/" + file.getName();
+            FileUtil.writeToFile(filename, ASTUtil.format(cu.toString()));
 //            PdfUtil.generatePdfFile(Env.TARGET_FOLDER + "/pdf/" + folderName + "/" + FileUtil.removeSuffix(file.getName()) + ".pdf", cu.toString());
         }
 

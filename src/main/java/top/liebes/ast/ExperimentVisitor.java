@@ -1,15 +1,13 @@
 package top.liebes.ast;
 
-import org.eclipse.jdt.core.dom.ASTVisitor;
-import org.eclipse.jdt.core.dom.ExpressionStatement;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.eclipse.jdt.core.dom.*;
 import top.liebes.util.ASTUtil;
 
 public class ExperimentVisitor extends ASTVisitor {
     private int numberOfClass = 0;
     private int numberOfMethod = 0;
     private int numberOfLock = 0;
+    private int numberOfLockDecl = 0;
 
     public int getNumberOfClass() {
         return numberOfClass;
@@ -41,5 +39,19 @@ public class ExperimentVisitor extends ASTVisitor {
             numberOfLock ++;
         }
         return super.visit(node);
+    }
+
+    @Override
+    public boolean visit(FieldDeclaration node) {
+        if(node.getType() instanceof SimpleType){
+            if(((SimpleType)node.getType()).getName().toString().equals("ReentrantReadWriteLock")){
+                numberOfLockDecl ++;
+            }
+        }
+        return super.visit(node);
+    }
+
+    public int getNumberOfLockDecl() {
+        return numberOfLockDecl;
     }
 }

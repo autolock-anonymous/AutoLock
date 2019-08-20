@@ -8,9 +8,6 @@ import top.liebes.env.Env;
 import top.liebes.util.ASTUtil;
 
 import java.util.Map;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import static sip4j.parser.AST_Parser.createMethodSignature;
 
 /**
  * @author liebes
@@ -33,6 +30,8 @@ public class AddPermissionVisitor extends ASTVisitor {
         super();
         this.permissionMap = permissionMap;
     }
+
+
 
     @Override
     public boolean visit(TypeDeclaration node){
@@ -63,10 +62,13 @@ public class AddPermissionVisitor extends ASTVisitor {
     // add import
     @Override
     public boolean visit(CompilationUnit node) {
-        ImportDeclaration permissionImport = ASTUtil.getImporDeclaration(Env.PERM_IMPORT_DECL);
-        ImportDeclaration lockImport = ASTUtil.getImporDeclaration("java.util.concurrent.locks.ReentrantReadWriteLock");
+        ImportDeclaration permissionImport = ASTUtil.getImportDeclaration(Env.PERM_IMPORT_DECL);
+        ImportDeclaration lockImport = ASTUtil.getImportDeclaration("java.util.concurrent.locks.ReentrantReadWriteLock");
         node.imports().add(ASTNode.copySubtree(node.getAST(), permissionImport));
         node.imports().add(ASTNode.copySubtree(node.getAST(), lockImport));
+        String pn = node.getPackage().getName().toString();
+        pn += ".withlock";
+        node.setPackage((PackageDeclaration) ASTNode.copySubtree(node.getAST(), ASTUtil.getPackageDeclaration(pn)));
         return super.visit(node);
     }
 }
