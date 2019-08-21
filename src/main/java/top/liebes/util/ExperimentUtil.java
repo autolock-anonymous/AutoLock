@@ -5,6 +5,7 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.slf4j.LoggerFactory;
 import top.liebes.ast.ExperimentVisitor;
 import top.liebes.controller.JFileController;
+import top.liebes.entity.ExpBean;
 import top.liebes.entity.JFile;
 import top.liebes.env.Env;
 
@@ -25,27 +26,49 @@ public class ExperimentUtil {
     public static final String PURE = "pure";
     public static final String FULL = "full";
 
-    public static void increase(String classname, String type){
-        map.putIfAbsent(classname, new Integer[]{0, 0, 0, 0, 0});
-        map.computeIfPresent(classname, (k, countArr) -> {
-            switch (type){
-                case IMMUTABLE:
-                    countArr[0] ++;
-                    break;
-                case PURE:
-                    countArr[1] ++;
-                    break;
-                case SHARE:
-                    countArr[2] ++;
-                    break;
-                case FULL:
-                    countArr[3] ++;
-                    break;
-                case UNIQUE:
-                    countArr[4] ++;
-            }
-            return countArr;
-        });
+    private static ExpBean expInfo = new ExpBean();
+
+    public static void increaseNewLockDeclaration(){
+        expInfo.setNewLockDeclaration(expInfo.getNewLockDeclaration() + 1);
+    }
+    public static void increaseTotalLockDeclaration(){
+        expInfo.setTotalLockDeclaration(expInfo.getTotalLockDeclaration() + 1);
+    }
+    public static void increaseMethod(){
+        expInfo.setNumberOfMethod(expInfo.getNumberOfMethod() + 1);
+    }
+    public static void increaseClass(){
+        expInfo.setNumberOfClass(expInfo.getNumberOfClass() + 1);
+    }
+    public static void increaseNewLockInsertion(){
+        expInfo.setNewLockInsertion(expInfo.getNewLockInsertion() + 1);
+    }
+    public static void increaseTotalLockInsertion(){
+        expInfo.setTotalLockInsertion(expInfo.getTotalLockInsertion() + 1);
+    }
+    public static void increasePure(){
+        expInfo.setNumberOfPure(expInfo.getNumberOfPure() + 1);
+    }
+    public static void increaseShare(){
+        expInfo.setNumberOfShare(expInfo.getNumberOfShare() + 1);
+    }
+    public static void increaseFull(){
+        expInfo.setNumberOfFull(expInfo.getNumberOfFull() + 1);
+    }
+    public static void increaseUnique(){
+        expInfo.setNumberOfUnique(expInfo.getNumberOfUnique() + 1);
+    }
+    public static void increaseImmutable(){
+        expInfo.setNumberOfImmutable(expInfo.getNumberOfImmutable() + 1);
+    }
+    public static void setSip4jTime(long time){
+        expInfo.setSip4jAnalysisTime(time);
+    }
+    public static void increaseInferLockTime(long time){
+        expInfo.setInferLockTime(expInfo.getInferLockTime() + time);
+    }
+    public static void increaseApplyLockTime(long time){
+        expInfo.setApplyLockTime(expInfo.getApplyLockTime() + time);
     }
 
     public static void calClassInfo(){
@@ -55,31 +78,27 @@ public class ExperimentUtil {
 
         // Read java files from folder
         ExperimentVisitor vistor = new ExperimentVisitor();
-        int pre = 0;
-        int preDecl = 0;
         for(File file : files){
-            JFile jFile = JFileController.get(file.getName());
-            System.out.println(file.getName());
             final CompilationUnit cu = ASTUtil.getCompilationUnit(file, null);
             cu.accept(vistor);
-            System.out.println((vistor.getNumberOfLockDecl() - preDecl) + " , " + (vistor.getNumberOfLock() - pre));
-            pre = vistor.getNumberOfLock();
-            preDecl = vistor.getNumberOfLockDecl();
         }
-
-        System.out.println((vistor.getNumberOfClass() - 1)  + "\t" + (vistor.getNumberOfMethod() - 1) + "\t" + vistor.getNumberOfLockDecl() + "\t" + vistor.getNumberOfLock());
     }
 
     public static void print(){
         calClassInfo();
-        int a[] = new int[5];
-        for(Map.Entry<String, Integer[]> entry : map.entrySet()){
-            a[1] += entry.getValue()[1];
-            a[2] += entry.getValue()[2];
-            a[3] += entry.getValue()[3];
-            a[4] += entry.getValue()[4];
-        }
-        System.out.println(a[1] + "\t" + a[2] + "\t" +a[3] + "\t" +a[4]);
-
+        String[] s = Env.SOURCE_FOLDER.split("/");
+        System.out.println(s[s.length - 2] + "/" + s[s.length - 1] + " | "
+                + expInfo.getNumberOfClass() + " | "
+                + expInfo.getNumberOfMethod() + " | "
+                + expInfo.getTotalLockDeclaration() + " | "
+                + expInfo.getTotalLockInsertion() + " | "
+                + expInfo.getNumberOfPure() + " | "
+                + expInfo.getNumberOfShare() + " | "
+                + expInfo.getNumberOfFull() + " | "
+                + expInfo.getNumberOfUnique() + " | "
+                + expInfo.getSip4jAnalysisTime() + " | "
+                + expInfo.getInferLockTime() + " | "
+                + expInfo.getApplyLockTime()
+        );
     }
 }

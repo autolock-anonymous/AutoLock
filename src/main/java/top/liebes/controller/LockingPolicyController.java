@@ -36,6 +36,7 @@ public class LockingPolicyController {
     }
 
     public void generate(){
+        long startTime = System.currentTimeMillis();
         String folder = Env.SOURCE_FOLDER;
         File root = new File(folder);
         List<File> files = FileUtil.getFiles(root, new String[]{"java"});
@@ -75,7 +76,7 @@ public class LockingPolicyController {
 
             // add lock for each class member variable according to the map obtained above
             Set<String> lockDeclarationMarkSet = new HashSet<>();
-            Map<String, Set<ASTNode>> sortMap = new TreeMap<>(new GraphUtil.MapKeyComparator());
+            Map<String, Set<ASTNode>> sortMap = new TreeMap<>(new GraphUtil.MapKeyComparator(varLockMap));
             sortMap.putAll(lockVisitor.fieldAccessMap);
 
             Set<String> unionLockMarkSet = new HashSet<>();
@@ -100,6 +101,8 @@ public class LockingPolicyController {
                 }
             }
 
+            ExperimentUtil.increaseInferLockTime(System.currentTimeMillis() - startTime);
+            startTime = System.currentTimeMillis();
 
             for(Map.Entry<String, Set<ASTNode>> entry : sortMap.entrySet()){
                 String s = entry.getKey();
@@ -157,7 +160,6 @@ public class LockingPolicyController {
                         lockDeclarationMarkSet.add(className + "." + lockName);
                     }
                 }
-                ExperimentUtil.increase(className, permissionPair.getV1());
                 ASTUtil.addLock(permissionPair, parentPair, lockName);
             }
             // add all unlock statement to finally block
@@ -406,11 +408,12 @@ public class LockingPolicyController {
             });
 
             // write result to file
-            String filename = file.getAbsolutePath();
-            filename = filename.replace("/entity/", "/entity/withlock/");
-//            String folderName = permissionVisitor.getPackageName().replace(".", "/");
-//            String targetFilePath = Env.TARGET_FOLDER + "/" + folderName + "/" + file.getName();
-            FileUtil.writeToFile(filename, ASTUtil.format(cu.toString()));
+//            String filename = file.getAbsolutePath();
+//            filename = filename.replace("/entity/", "/entity/withlock/");
+            String folderName = permissionVisitor.getPackageName().replace(".", "/");
+            String targetFilePath = Env.TARGET_FOLDER + "/" + folderName + "/" + file.getName();
+            FileUtil.writeToFile(targetFilePath, ASTUtil.format(cu.toString()));
+            ExperimentUtil.increaseApplyLockTime(System.currentTimeMillis() - startTime);
 //            PdfUtil.generatePdfFile(Env.TARGET_FOLDER + "/pdf/" + folderName + "/" + FileUtil.removeSuffix(file.getName()) + ".pdf", cu.toString());
         }
 

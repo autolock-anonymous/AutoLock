@@ -274,7 +274,7 @@ public class ASTUtil {
                     sortList.add(Pair.make((Statement) block.statements().get(i), i));
                 }
             }
-            Collections.sort(sortList, (o1, o2) -> {
+            sortList.sort((o1, o2) -> {
                 LockStatementInfo info1 = ASTUtil.getLockInfo(o1.getV1());
                 LockStatementInfo info2 = ASTUtil.getLockInfo(o2.getV1());
                 if(info1 == null){
@@ -283,13 +283,15 @@ public class ASTUtil {
                 if(info2 == null){
                     return -1;
                 }
-                if(info1.getName().equals(info2)){
+                if(info1.getName().equals(info2.getName())){
                     if(info1.isLock()){
                         return -1;
                     }
                     return 1;
                 }
-                return System.identityHashCode(info1.getName()) - System.identityHashCode(info2.getName());
+//                System.out.println(info1.getName() + " : " + System.identityHashCode(info1.getName()));
+//                System.out.println(info2.getName() + " : " + System.identityHashCode(info2.getName()));
+                return info1.getName().hashCode() - info2.getName().hashCode();
             });
 
             for(int i = 0; i + 1 < sortList.size(); i += 2){
@@ -670,10 +672,12 @@ public class ASTUtil {
             permissionPair.setV1("immutable");
         }
         if("immutable".equals(permissionPair.getV1() )){
+            ExperimentUtil.increaseImmutable();
             // do nothing
             return;
         }
         else if ("pure".equals(permissionPair.getV1() )){
+            ExperimentUtil.increasePure();
             // add read lock
             ASTUtil.surroundedByLock(parentPair, LockStatementInfo.READ_LOCK, lockName);
         }
@@ -682,6 +686,19 @@ public class ASTUtil {
                         || "full".equals(permissionPair.getV1())
                         || "unique".equals(permissionPair.getV1())
         ){
+            switch (permissionPair.getV1()){
+                case "share":
+                    ExperimentUtil.increaseShare();
+                    break;
+                case "full":
+                    ExperimentUtil.increaseFull();
+                    break;
+                case "unique":
+                    ExperimentUtil.increaseUnique();
+                    break;
+                default:
+                    break;
+            }
             ASTUtil.surroundedByLock(parentPair, LockStatementInfo.WRITE_LOCK, lockName);
             // add write lock
         }

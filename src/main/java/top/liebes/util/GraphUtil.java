@@ -107,9 +107,40 @@ public class GraphUtil {
     }
 
     public static class MapKeyComparator implements Comparator<String>{
+        private Map<String, String> varLockMap;
+
+        public MapKeyComparator(Map<String, String> varLockMap){
+            this.varLockMap = varLockMap;
+        }
+
         @Override
         public int compare(String s1, String s2){
-            return System.identityHashCode(s1) - System.identityHashCode(s2);
+
+            String[] tmp1 = s1.split("(\\.\\{|}\\.)");
+            String[] tmp2 = s2.split("(\\.\\{|}\\.)");
+            // should be like className.methodName.varName
+            if(tmp1.length != 3 || tmp2.length != 3){
+                logger.error("name error : " + s1);
+                logger.error("name error : " + s2);
+                return -1;
+            }
+            String className1 = tmp1[0];
+            String methodName1 = "{" + tmp1[1] + "}";
+            String varName1 = tmp1[2];
+
+            String className2 = tmp2[0];
+            String methodName2 = "{" + tmp2[1] + "}";
+            String varName2 = tmp2[2];
+
+            if(className1.equals(className2)){
+                if(methodName1.equals(methodName2)){
+                    String lockName1 = varLockMap.getOrDefault(className1 + "." + varName1, varName1 + "Lock");
+                    String lockName2 = varLockMap.getOrDefault(className2 + "." + varName2, varName2 + "Lock");
+                    return System.identityHashCode(lockName1) - System.identityHashCode(lockName2);
+                }
+                return methodName1.compareTo(methodName2);
+            }
+            return className1.compareTo(className2);
         }
     }
 

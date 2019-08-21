@@ -106,6 +106,7 @@ public class Main  {
 		}
 		logger.info("Graph Construction and permission inference is done");
 		logger.info("sip4j get information cost : " + (System.currentTimeMillis() - startTime));
+		ExperimentUtil.setSip4jTime((System.currentTimeMillis() - startTime));
 		startTime = System.currentTimeMillis();
 		// generate locking policy and write to file
 		LockingPolicyController.getInstance().generate();
