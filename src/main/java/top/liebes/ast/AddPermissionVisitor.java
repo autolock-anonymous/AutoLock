@@ -66,9 +66,9 @@ public class AddPermissionVisitor extends ASTVisitor {
         ImportDeclaration lockImport = ASTUtil.getImportDeclaration("java.util.concurrent.locks.ReentrantReadWriteLock");
         node.imports().add(ASTNode.copySubtree(node.getAST(), permissionImport));
         node.imports().add(ASTNode.copySubtree(node.getAST(), lockImport));
-//        String pn = node.getPackage().getName().toString();
-//        pn += ".withlock";
-//        node.setPackage((PackageDeclaration) ASTNode.copySubtree(node.getAST(), ASTUtil.getPackageDeclaration(pn)));
+        String pn = node.getPackage().getName().toString();
+        pn += ".withlock";
+        node.setPackage((PackageDeclaration) ASTNode.copySubtree(node.getAST(), ASTUtil.getPackageDeclaration(pn)));
         return super.visit(node);
     }
 }

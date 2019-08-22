@@ -408,11 +408,11 @@ public class LockingPolicyController {
             });
 
             // write result to file
-//            String filename = file.getAbsolutePath();
-//            filename = filename.replace("/entity/", "/entity/withlock/");
-            String folderName = permissionVisitor.getPackageName().replace(".", "/");
-            String targetFilePath = Env.TARGET_FOLDER + "/" + folderName + "/" + file.getName();
-            FileUtil.writeToFile(targetFilePath, ASTUtil.format(cu.toString()));
+            String filename = file.getAbsolutePath();
+            filename = filename.replace("/entity/", "/entity/withlock/");
+//            String folderName = permissionVisitor.getPackageName().replace(".", "/");
+//            String targetFilePath = Env.TARGET_FOLDER + "/" + folderName + "/" + file.getName();
+            FileUtil.writeToFile(filename, ASTUtil.format(cu.toString()));
             ExperimentUtil.increaseApplyLockTime(System.currentTimeMillis() - startTime);
 //            PdfUtil.generatePdfFile(Env.TARGET_FOLDER + "/pdf/" + folderName + "/" + FileUtil.removeSuffix(file.getName()) + ".pdf", cu.toString());
         }
