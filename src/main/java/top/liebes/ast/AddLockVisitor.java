@@ -18,7 +18,15 @@ public class AddLockVisitor extends ASTVisitor {
     }
     private static String classname = "";
     private static String methodName = "";
+
+    /**
+     * map : {classname.methodName.varName -> set(node of variable)}
+     */
     public Map<String, Set<ASTNode>> fieldAccessMap = new HashMap<>();
+
+    /**
+     * map : {classname -> set(varName)}
+     */
     public Map<String, Set<String>> classMembers = new HashMap<>();
 
     @Override

@@ -216,7 +216,7 @@ public class ASTUtil {
 //                    lastIndex --;
 //                }
 //            }
-
+            // surround statements by lock pair.
             switch (lockType){
                 case LockStatementInfo.READ_LOCK:
                     preStatement = getReadWriteLockExpression(lockName, true, true);
@@ -266,7 +266,7 @@ public class ASTUtil {
                     return false;
             }
 
-            // correct the order
+            // correct the order, lock should be added by its name hashcode
             lastIndex += 2;
             List<Pair<Statement, Integer>> sortList = new LinkedList<>();
             for(int i = 0; i < block.statements().size(); i ++){
@@ -294,9 +294,11 @@ public class ASTUtil {
                 return info1.getName().hashCode() - info2.getName().hashCode();
             });
 
+            // move lock with uncorrected place to right place
             for(int i = 0; i + 1 < sortList.size(); i += 2){
                 Pair<Statement, Integer> lock = sortList.get(i);
                 Pair<Statement, Integer> unlock = sortList.get(i + 1);
+                // move lock statement
                 for(int j = lock.getV2() + 1; j < unlock.getV2(); j ++){
                     LockStatementInfo innerLockInfo = ASTUtil.getLockInfo((Statement) block.statements().get(j));
                     if(innerLockInfo != null){
@@ -327,7 +329,7 @@ public class ASTUtil {
                         }
                     }
                 }
-
+                // move unlock statement
                 for(int j = unlock.getV2() - 1 ; j > lock.getV2(); j --){
                     LockStatementInfo innerLockInfo = ASTUtil.getLockInfo((Statement) block.statements().get(j));
                     if(innerLockInfo != null){
@@ -363,7 +365,7 @@ public class ASTUtil {
             // remove lock if already some statements have already been locked, this may happens when adding read lock.
             int lockIndex = -1;
             int unLockIndex = -1;
-
+            // there may happen a lock scope is inside another lock scope which is useless
             for(int i = 0 ; i < block.statements().size(); i ++){
                 if(i == preIndex || i == lastIndex){
                     continue;
@@ -607,6 +609,11 @@ public class ASTUtil {
         return true;
     }
 
+    /**
+     * get method unique name, contains parameters. eg. {public int main(String[] args)}
+     * @param node method declaration node obtained from jdt ast
+     * @return qualified name of method. eg. {public int main(String[] args)}
+     */
     public static String getUniquelyIdentifiers(MethodDeclaration node){
         String methodName = node.getName().toString().trim();
         List<String> list = new ArrayList<>();

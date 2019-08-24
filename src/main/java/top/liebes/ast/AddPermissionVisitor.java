@@ -24,14 +24,10 @@ public class AddPermissionVisitor extends ASTVisitor {
 
     private String packageName = "";
 
-    private int cnt = 0;
-
     public AddPermissionVisitor(Map<String, Pair<String, String>> permissionMap){
         super();
         this.permissionMap = permissionMap;
     }
-
-
 
     @Override
     public boolean visit(TypeDeclaration node){

@@ -5,6 +5,7 @@ import org.eclipse.jdt.core.dom.*;
 import org.slf4j.LoggerFactory;
 import top.liebes.ast.AddLockVisitor;
 import top.liebes.ast.AddPermissionVisitor;
+import top.liebes.ast.RefactorLockVisitor;
 import top.liebes.entity.JFile;
 import top.liebes.entity.LockStatementInfo;
 import top.liebes.entity.Pair;
@@ -49,6 +50,7 @@ public class LockingPolicyController {
             final CompilationUnit cu = ASTUtil.getCompilationUnit(file, null);
 
             // store each class member appearance in each method
+            // @see LockVisitor.classMembers and LockVisitor.fieldAccessMap
             AddLockVisitor lockVisitor = new AddLockVisitor();
             try {
                 cu.accept(lockVisitor);
@@ -57,8 +59,11 @@ public class LockingPolicyController {
             }
 
             // get information from sip4j
+            // map : {class.method.var -> (pre permission, post permission)}
             Map<String, Pair<String, String>> permissionMap = GraphUtil.getPermissionForVar(jFile);
+            // map : {class.method -> (pre permission, post permission)}
             Map<String, Pair<String, String>> permissionForMethodMap = GraphUtil.getPermissionForMethod(jFile, lockVisitor.classMembers);
+            // map : {var -> lockName} two members write in one function should have same lock
             Map<String, String> varLockMap = GraphUtil.getLockForVar(jFile, lockVisitor.classMembers);
 
 //            for(Map.Entry<String, Pair<String, String> > entry : permissionForMethodMap.entrySet()){
@@ -76,11 +81,14 @@ public class LockingPolicyController {
 
             // add lock for each class member variable according to the map obtained above
             Set<String> lockDeclarationMarkSet = new HashSet<>();
+            // sort by key hashcode
             Map<String, Set<ASTNode>> sortMap = new TreeMap<>(new GraphUtil.MapKeyComparator(varLockMap));
             sortMap.putAll(lockVisitor.fieldAccessMap);
 
+            // record if a variable has been locked by previous visited variable that has same lock.
             Set<String> unionLockMarkSet = new HashSet<>();
 
+            // {lockName  -> set(ast node which should be locked by this lock)}
             Map<String, Set<ASTNode>> nodeLockMap = new HashMap<>();
             for(Map.Entry<String, Set<ASTNode>> entry : sortMap.entrySet()){
                 String s = entry.getKey();
@@ -141,6 +149,7 @@ public class LockingPolicyController {
                     }
                 }
 
+                // get if a node is static for static field should be protected by static lock.
                 boolean isStatic = false;
                 for(ASTNode astNode : nodeSet){
                     if(astNode instanceof SimpleName){
@@ -153,7 +162,9 @@ public class LockingPolicyController {
                     }
                 }
 
+                // get parent node. (parentNode, (first statement, last statement))
                 Pair<ASTNode, Pair<ASTNode, ASTNode>> parentPair = GraphUtil.getParentNode(nodeSet);
+                // add lock declaration
                 if(! lockDeclarationMarkSet.contains(className + "." + lockName)){
                     boolean flag = ASTUtil.addLockDeclaration(parentPair.getV1(), lockName, isStatic);
                     if(flag){
@@ -162,237 +173,11 @@ public class LockingPolicyController {
                 }
                 ASTUtil.addLock(permissionPair, parentPair, lockName);
             }
-            // add all unlock statement to finally block
-            cu.accept(new ASTVisitor() {
-                private Stack<Stack<Statement>> methodStack = new Stack<>();
 
-                @Override
-                public boolean visit(MethodDeclaration node) {
-                    methodStack.push(new Stack<>());
-                    return super.visit(node);
-                }
+            // add all unlock statement to finally block if there is a return statement of throw statement between lock pairs.
+            cu.accept(new RefactorLockVisitor());
 
-                @Override
-                public void endVisit(MethodDeclaration node) {
-                    Stack<Statement> localStack = new Stack<>();
-                    Stack<Statement> statementStack = methodStack.pop();
-                    if(statementStack == null){
-                        return;
-                    }
-                    List<Statement> unlockList = new ArrayList<>();
-                    while(!statementStack.empty()){
-                        Statement lockStatement = statementStack.pop();
-                        while(!statementStack.empty() && !ASTUtil.isLockStatement(lockStatement, true)){
-                            localStack.push(lockStatement);
-                            lockStatement = statementStack.pop();
-                        }
-                        if(!ASTUtil.isLockStatement(lockStatement, true)){
-                            break;
-                        }
-                        boolean needTry = false;
-                        Statement unLockStatement = localStack.pop();
-                        while(!localStack.empty() && !ASTUtil.isLockPair(lockStatement, unLockStatement)){
-                            if(unLockStatement.getNodeType() == ASTNode.RETURN_STATEMENT || unLockStatement.getNodeType() == ASTNode.THROW_STATEMENT){
-                                needTry = true;
-                            }
-                            statementStack.push(unLockStatement);
-                            unLockStatement = localStack.pop();
-                        }
-                        while(!localStack.empty() && ASTUtil.isLockStatement(localStack.peek(), false)){
-                            unlockList.add(unLockStatement);
-                            unLockStatement = localStack.pop();
-                        }
-                        if(!ASTUtil.isLockPair(lockStatement, unLockStatement)){
-                            localStack.push(unLockStatement);
-                            continue;
-                        }
-                        if(needTry){
-                            // add try block;
-                            Block block = (Block) lockStatement.getParent();
-
-                            TryStatement tryStatement = node.getAST().newTryStatement();
-                            Block tryBlock = tryStatement.getAST().newBlock();
-                            Block finallyBlock = tryStatement.getAST().newBlock();
-
-                            tryStatement.setBody(tryBlock);
-                            tryStatement.setFinally(finallyBlock);
-                            for(int k = 0; k < unlockList.size(); k ++){
-                                unlockList.get(k).delete();
-                            }
-                            for(int i = 0; i < block.statements().size(); i ++){
-                                if(block.statements().get(i) == lockStatement){
-                                    for(int j = i; j < block.statements().size(); j ++){
-                                        if(block.statements().get(j) == unLockStatement){
-                                            for(int k = 0; k < unlockList.size(); k ++){
-                                                finallyBlock.statements().add(ASTNode.copySubtree(finallyBlock.getAST(), unlockList.get(k)));
-                                            }
-                                            finallyBlock.statements().add(ASTNode.copySubtree(finallyBlock.getAST(), unLockStatement));
-                                            block.statements().remove(j);
-                                            block.statements().add(j, ASTNode.copySubtree(block.getAST(), tryStatement));
-                                            unlockList.clear();
-                                            j --;
-                                            break;
-                                        }
-                                        else{
-                                            tryBlock.statements().add(ASTNode.copySubtree(tryBlock.getAST(), (Statement) block.statements().get(j)));
-                                            block.statements().remove(j);
-                                            j --;
-                                        }
-                                    }
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    super.endVisit(node);
-                }
-
-                @Override
-                public boolean visit(ExpressionStatement node) {
-                    if(!methodStack.empty()){
-                        methodStack.peek().push(node);
-                    }
-                    return super.visit(node);
-                }
-
-                @Override
-                public boolean visit(ReturnStatement node) {
-                    if(!methodStack.empty()){
-                        methodStack.peek().push(node);
-                    }
-                    return super.visit(node);
-                }
-
-                @Override
-                public boolean visit(ThrowStatement node) {
-                    if(!methodStack.empty()){
-                        methodStack.peek().push(node);
-                    }
-                    return super.visit(node);
-                }
-
-                @Override
-                public boolean visit(AssertStatement node) {
-                    if(!methodStack.empty()){
-                        methodStack.peek().push(node);
-                    }
-                    return super.visit(node);
-                }
-
-                @Override
-                public boolean visit(BreakStatement node) {
-                    if(!methodStack.empty()){
-                        methodStack.peek().push(node);
-                    }
-                    return super.visit(node);
-                }
-
-                @Override
-                public boolean visit(ContinueStatement node) {
-                    if(!methodStack.empty()){
-                        methodStack.peek().push(node);
-                    }
-                    return super.visit(node);
-                }
-
-                @Override
-                public boolean visit(DoStatement node) {
-                    if(!methodStack.empty()){
-                        methodStack.peek().push(node);
-                    }
-                    return super.visit(node);
-                }
-
-                @Override
-                public boolean visit(EmptyStatement node) {
-                    if(!methodStack.empty()){
-                        methodStack.peek().push(node);
-                    }
-                    return super.visit(node);
-                }
-
-                @Override
-                public boolean visit(EnhancedForStatement node) {
-                    if(!methodStack.empty()){
-                        methodStack.peek().push(node);
-                    }
-                    return super.visit(node);
-                }
-
-                @Override
-                public boolean visit(ForStatement node) {
-                    if(!methodStack.empty()){
-                        methodStack.peek().push(node);
-                    }
-                    return super.visit(node);
-                }
-
-                @Override
-                public boolean visit(LabeledStatement node) {
-                    if(!methodStack.empty()){
-                        methodStack.peek().push(node);
-                    }
-                    return super.visit(node);
-                }
-
-                @Override
-                public boolean visit(IfStatement node) {
-                    if(!methodStack.empty()){
-                        methodStack.peek().push(node);
-                    }
-                    return super.visit(node);
-                }
-
-                @Override
-                public boolean visit(SwitchStatement node) {
-                    if(!methodStack.empty()){
-                        methodStack.peek().push(node);
-                    }
-                    return super.visit(node);
-                }
-
-                @Override
-                public boolean visit(SynchronizedStatement node) {
-                    if(!methodStack.empty()){
-                        methodStack.peek().push(node);
-                    }
-                    return super.visit(node);
-                }
-
-                @Override
-                public boolean visit(TryStatement node) {
-                    if(!methodStack.empty()){
-                        methodStack.peek().push(node);
-                    }
-                    return super.visit(node);
-                }
-
-                @Override
-                public boolean visit(TypeDeclarationStatement node) {
-                    if(!methodStack.empty()){
-                        methodStack.peek().push(node);
-                    }
-                    return super.visit(node);
-                }
-
-                @Override
-                public boolean visit(VariableDeclarationStatement node) {
-                    if(!methodStack.empty()){
-                        methodStack.peek().push(node);
-                    }
-                    return super.visit(node);
-                }
-
-                @Override
-                public boolean visit(WhileStatement node) {
-                    if(!methodStack.empty()){
-                        methodStack.peek().push(node);
-                    }
-                    return super.visit(node);
-                }
-
-            });
-
+            // remove useless lock scope
             cu.accept(new ASTVisitor() {
                 @Override
                 public boolean visit(Block node) {
