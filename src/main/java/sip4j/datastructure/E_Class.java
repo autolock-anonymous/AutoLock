@@ -134,4 +134,9 @@ public class E_Class {
 	public void setFilename(String filename) {
 		this.filename = filename;
 	}
+
+	@Override
+	public String toString() {
+		return this.filename + " " + this.classQName;
+	}
 }

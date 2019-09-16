@@ -273,4 +273,8 @@ public class E_Method implements Cloneable {
 	 * }
 	 */
 
+	@Override
+	public String toString() {
+		return methodsignature;
+	}
 }

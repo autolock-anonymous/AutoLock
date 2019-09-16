@@ -563,13 +563,15 @@ public class Data_Controller {
 		return method;
 	}
 	public static E_Method searchMethod(IMethodBinding bind){
-
 		E_Method method = null;
-		LinkedList<E_Method> _methds = fetchAllMethods();
-		if(_methds != null){
-			for (E_Method m:_methds){
+		LinkedList<E_Method> methods = fetchAllMethods();
+		if(methods != null){
+			for (E_Method m : methods){
 				// if(m.equals(o))
-				if(bind.getName().equals(m.getName())
+//				if(bind.getName().equals(m.getName())
+//						&& bind.getDeclaringClass().getQualifiedName().equals(m.getDeclClassQName()
+//				)
+				if(ASTUtil.getUniquelyIdentifiers(bind).equals(ASTUtil.getUniquelyIdentifiers(m))
 						&& bind.getDeclaringClass().getQualifiedName().equals(m.getDeclClassQName()
 				)
 				){

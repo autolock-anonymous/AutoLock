@@ -262,7 +262,7 @@ public class AST_Parser {
 					}
 				}
 			}
-			_method.setModifier(AST_Parser.setMethodModifier(bind));
+			_method.setModifier(AST_Parser.getMethodModifier(bind));
 			_method.setIdentifier(node.getName().getIdentifier().toString());
 			_method.setConstr(node.isConstructor());
 			if(bind != null){
@@ -312,8 +312,9 @@ public class AST_Parser {
 					_method.setQualifyingObject(obj);*/
 			_method.setQualifyingObject(obj);
 			// create and set method signatures
-			String signature_string = createMethodSignature(node);
-			_method.setMethodSignatures(" "+_method.getModifier()+" "+_method.getReturnType()+" "+_method.getIdentifier()+"("+signature_string+")");
+//			String signature_string = createMethodSignature(node);
+			_method.setMethodSignatures(ASTUtil.getUniquelyIdentifiers(node));
+//			_method.setMethodSignatures(" "+_method.getModifier()+" "+_method.getReturnType()+" "+_method.getIdentifier()+"("+signature_string+")");
 			//_method.setMethodSignatures(_method.getModifier()+" "+_method.getReturnType()+" "+_method.getIdentifier()+"()");
 			List<String> statements =  new LinkedList<String>();
 			Block body = node.getBody();
@@ -341,7 +342,7 @@ public class AST_Parser {
 		}
 		return signature_string;
 	}
-	public static String setMethodModifier(IMethodBinding mb){
+	public static String getMethodModifier(IMethodBinding mb){
 		String modifier = "";
 		if(mb.getModifiers() == Modifier.ABSTRACT){
 			modifier = GlobalVariables.ABSTRACT;
@@ -383,17 +384,16 @@ public class AST_Parser {
 				_method = new E_Method();
 				//create meta data of a constructor
 				_method.setName(node.getName().toString());
-				_method.setIdentifier(node.getName().getIdentifier().toString());
+				_method.setIdentifier(node.getName().getIdentifier());
 				_method.setDeclClassQName(node.resolveBinding().getQualifiedName());
-				_method.setDeclaringClass(node.resolveBinding().getName().toString());
+				_method.setDeclaringClass(node.resolveBinding().getName());
 				_method.setReturnType(GlobalVariables.NONE);
 				_method.setModifier(GlobalVariables.PUBLIC);
 				_method.setConstr(true);
 				_method.setQualifyingObject(obj);
 				_method.addStatements(null);
 				// create and set method signatures
-				String signature_string = "";
-				_method.setMethodSignatures(_method.getModifier()+" "+_method.getReturnType()+" "+_method.getIdentifier()+"("+signature_string+")");
+				_method.setMethodSignatures("{"+ GlobalVariables.PUBLIC + " "+_method.getIdentifier()+"()}");
 			}
 		}
 		return _method;
@@ -2886,10 +2886,8 @@ else{
 										 E_Method _method) {
 		boolean flag = false;
 		for (int i = 0; i < list.size(); i++) {
-			if (list.get(i).getIdentifier().equals(_method.getIdentifier())
-					&& list.get(i).getReturnType().equals(_method.getReturnType())
+			if (list.get(i).getMethodSignatures().equals(_method.getMethodSignatures())
 					&& list.get(i).getDeclClassQName().equals(_method.getDeclClassQName())
-					&& list.get(i).getParameters().equals(_method.getParameters())
 			){
 				flag = true;
 				break;

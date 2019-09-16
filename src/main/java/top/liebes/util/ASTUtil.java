@@ -615,28 +615,32 @@ public class ASTUtil {
      * @return qualified name of method. eg. {public int main(String[] args)}
      */
     public static String getUniquelyIdentifiers(MethodDeclaration node){
-        String methodName = node.getName().toString().trim();
-        List<String> list = new ArrayList<>();
-        for(Object obj : node.parameters()){
-            SingleVariableDeclaration parameter = (SingleVariableDeclaration) obj;
-            list.add(parameter.toString().trim());
-        }
-        String s = String.join(", ", list);
         if(node.resolveBinding() == null){
             return "wrongClassBinding";
         }
-        String modifier = AST_Parser.setMethodModifier(node.resolveBinding()).trim();
-        String returnType = "";
-        if (! node.isConstructor()) {
-            if (node.getReturnType2() != null && node.resolveBinding() != null){
-                returnType = node.resolveBinding().getReturnType().getName();
-            }
-        }
-        return "{" + modifier + (modifier.equals("") ? "" : " ")  + returnType + (returnType.equals("") ? "" : " ") + methodName + "(" + s + ")}";
+        return getUniquelyIdentifiers(node.resolveBinding());
     }
 
     public static String getUniquelyIdentifiers(E_MethodGraph method){
-        return "{" + method.getMethodSignatures().trim() + "}";
+        return method.getMethodSignatures().trim();
+    }
+
+    public static String getUniquelyIdentifiers(E_Method method){
+        return method.getMethodSignatures().trim();
+    }
+
+    public static String getUniquelyIdentifiers(IMethodBinding node){
+        String modifier = AST_Parser.getMethodModifier(node).trim();
+        String methodName = node.getName();
+        List<String> list = new ArrayList<>();
+        for(ITypeBinding typeBinding : node.getParameterTypes()){
+            list.add(typeBinding.getQualifiedName().trim());
+        }
+        String parameters = String.join(",", list);
+        String returnType = node.getReturnType().getQualifiedName();
+
+        return "{" + modifier + (modifier.equals("") ? "" : " ")
+                + returnType + (returnType.equals("") ? "" : " ") + methodName + "(" + parameters + ")}";
     }
 
     /**
