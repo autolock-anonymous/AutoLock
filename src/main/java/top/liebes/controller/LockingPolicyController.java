@@ -5,9 +5,9 @@ import org.eclipse.jdt.core.dom.*;
 import org.slf4j.LoggerFactory;
 import top.liebes.ast.AddLockVisitor;
 import top.liebes.ast.AddPermissionVisitor;
+import top.liebes.ast.FieldFindVisitor;
 import top.liebes.ast.RefactorLockVisitor;
 import top.liebes.entity.JFile;
-import top.liebes.entity.LockStatementInfo;
 import top.liebes.entity.Pair;
 import top.liebes.env.Env;
 import top.liebes.util.ASTUtil;
@@ -49,22 +49,34 @@ public class LockingPolicyController {
             // get compilation unit for each file
             final CompilationUnit cu = ASTUtil.getCompilationUnit(file, null);
 
-            // store each class member appearance in each method
-            // @see LockVisitor.classMembers and LockVisitor.fieldAccessMap
-            AddLockVisitor lockVisitor = new AddLockVisitor();
-            try {
-                cu.accept(lockVisitor);
-            } catch (IllegalArgumentException ex) {
-                ex.printStackTrace();
+            // @see LockVisitor.classMembers
+            FieldFindVisitor fieldFindVisitor = new FieldFindVisitor();
+            try{
+                cu.accept(fieldFindVisitor);
+            }
+            catch (IllegalArgumentException e){
+                e.printStackTrace();
             }
 
             // get information from sip4j
             // map : {class.method.var -> (pre permission, post permission)}
             Map<String, Pair<String, String>> permissionMap = GraphUtil.getPermissionForVar(jFile);
+
             // map : {class.method -> (pre permission, post permission)}
-            Map<String, Pair<String, String>> permissionForMethodMap = GraphUtil.getPermissionForMethod(jFile, lockVisitor.classMembers);
+            Map<String, Pair<String, String>> permissionForMethodMap = GraphUtil.getPermissionForMethod(jFile, fieldFindVisitor.classMembers);
+
             // map : {var -> lockName} two members write in one function should have same lock
-            Map<String, String> varLockMap = GraphUtil.getLockForVar(jFile, lockVisitor.classMembers);
+            Map<String, String> varLockMap = GraphUtil.getLockForVar(jFile, fieldFindVisitor.classMembers);
+
+
+            // store each class member appearance in each method
+            //  LockVisitor.fieldAccessMap
+            AddLockVisitor lockVisitor = new AddLockVisitor(fieldFindVisitor.classMembers, permissionMap);
+            try {
+                cu.accept(lockVisitor);
+            } catch (IllegalArgumentException ex) {
+                ex.printStackTrace();
+            }
 
 //            for(Map.Entry<String, Pair<String, String> > entry : permissionForMethodMap.entrySet()){
 //                logger.debug(entry.getKey() + " " + entry.getValue().getV1() + " " + entry.getValue().getV2());

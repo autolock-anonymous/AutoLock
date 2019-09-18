@@ -8,7 +8,7 @@ import org.eclipse.jdt.core.dom.AST;
  */
 public class Env {
     public static String SOURCE_FOLDER =
-            "/Users/liebes/project/laboratory/Sip4J/benchmarks/src/util/vector";
+            "/Users/liebes/project/laboratory/Sip4J/benchmarks/src/pldi/BufferedInputStream";
 
     public static String[] CLASSPATH = {
             "/Library/Java/JavaVirtualMachines/jdk1.8.0_192.jdk/Contents/Home/jre/lib/rt.jar",
