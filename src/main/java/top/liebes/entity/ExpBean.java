@@ -1,5 +1,8 @@
 package top.liebes.entity;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class ExpBean {
     private long sip4jAnalysisTime;
 
@@ -29,6 +32,8 @@ public class ExpBean {
 
     private int totalLockInsertion;
 
+    private Map<String, Integer> fieldsCount;
+
     public ExpBean() {
         this.sip4jAnalysisTime = 0;
         this.inferLockTime = 0;
@@ -43,6 +48,7 @@ public class ExpBean {
         this.totalLockDeclaration = 0;
         this.newLockInsertion = 0;
         this.totalLockInsertion = 0;
+        this.fieldsCount = new HashMap<>();
     }
 
     public long getSip4jAnalysisTime() {
@@ -155,5 +161,13 @@ public class ExpBean {
 
     public void setNumberOfUnique(int numberOfUnique) {
         this.numberOfUnique = numberOfUnique;
+    }
+
+    public Map<String, Integer> getFieldsCount() {
+        return fieldsCount;
+    }
+
+    public void setFieldsCount(Map<String, Integer> fieldsCount) {
+        this.fieldsCount = fieldsCount;
     }
 }

@@ -197,13 +197,13 @@ public class AST_Parser {
 							}
 							else if (field.getType().isArrayType()) {
 								Type componentType = ((ArrayType) field
-										.getType()).getComponentType();
+										.getType()).getElementType();
 								if (componentType.isParameterizedType()) {
 									_field.setType(((ParameterizedType) componentType)
 											.getType().toString());
 								} else{
 									_field.setType(((ArrayType) field.getType())
-											.getComponentType().toString());
+											.getElementType().toString());
 								}
 							}
 							_field.setModifier(field.getModifiers());

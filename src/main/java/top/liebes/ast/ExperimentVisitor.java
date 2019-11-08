@@ -5,11 +5,14 @@ import top.liebes.util.ASTUtil;
 import top.liebes.util.ExperimentUtil;
 
 public class ExperimentVisitor extends ASTVisitor {
+    public String className = null;
+
 
 
     @Override
     public boolean visit(TypeDeclaration node) {
         ExperimentUtil.increaseClass();
+        this.className = node.getName().toString();
         return super.visit(node);
     }
 
@@ -34,6 +37,7 @@ public class ExperimentVisitor extends ASTVisitor {
                 ExperimentUtil.increaseTotalLockDeclaration();
             }
         }
+        ExperimentUtil.increaseField(className);
         return super.visit(node);
     }
 }

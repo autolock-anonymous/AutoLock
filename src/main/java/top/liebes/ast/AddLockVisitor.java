@@ -40,7 +40,18 @@ public class AddLockVisitor extends ASTVisitor {
     }
 
     @Override
+    public void endVisit(MethodDeclaration node) {
+        methodName = "";
+        super.endVisit(node);
+    }
+
+
+
+    @Override
     public boolean visit(SimpleName node){
+        if(methodName.equalsIgnoreCase("addBefore")){
+            System.out.println(classname);
+        }
         // check classname and method name to make sure SimpleName is in method
         if(! "".equals(classname) && ! "".equals(methodName)){
             IBinding binding = node.resolveBinding();
@@ -62,9 +73,6 @@ public class AddLockVisitor extends ASTVisitor {
 
     @Override
     public boolean visit(MethodInvocation node) {
-        if(node.getName().toString().equals("ensureOpen")){
-            System.out.println("???");
-        }
         if(node.resolveMethodBinding() != null){
             IMethodBinding bind = node.resolveMethodBinding();
             if(! bind.isConstructor()){
@@ -95,5 +103,11 @@ public class AddLockVisitor extends ASTVisitor {
             classname = node.getName().toString();
         }
         return super.visit(node);
+    }
+
+    @Override
+    public void endVisit(AnnotationTypeDeclaration node) {
+        classname = "";
+        super.endVisit(node);
     }
 }

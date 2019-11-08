@@ -70,6 +70,10 @@ public class ExperimentUtil {
     public static void increaseApplyLockTime(long time){
         expInfo.setApplyLockTime(expInfo.getApplyLockTime() + time);
     }
+    public static void increaseField(String fName){
+        expInfo.getFieldsCount().putIfAbsent(fName, 0);
+        expInfo.getFieldsCount().computeIfPresent(fName, (key, value) -> ++value);
+    }
 
     public static void calClassInfo(){
         String folder = Env.SOURCE_FOLDER;
@@ -87,6 +91,10 @@ public class ExperimentUtil {
     public static void print(){
         calClassInfo();
         String[] s = Env.SOURCE_FOLDER.split("/");
+        int total = 0;
+        for(Map.Entry<String, Integer> entry : expInfo.getFieldsCount().entrySet()){
+            total += entry.getValue();
+        }
         System.out.println(s[s.length - 2] + "/" + s[s.length - 1] + " | "
                 + expInfo.getNumberOfClass() + " | "
                 + expInfo.getNumberOfMethod() + " | "
@@ -98,7 +106,9 @@ public class ExperimentUtil {
                 + expInfo.getNumberOfUnique() + " | "
                 + expInfo.getSip4jAnalysisTime() + " | "
                 + expInfo.getInferLockTime() + " | "
-                + expInfo.getApplyLockTime()
+                + expInfo.getApplyLockTime() + " | "
+                + total
         );
+
     }
 }
