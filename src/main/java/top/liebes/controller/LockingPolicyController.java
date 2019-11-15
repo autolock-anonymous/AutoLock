@@ -10,6 +10,7 @@ import top.liebes.ast.RefactorLockVisitor;
 import top.liebes.entity.JFile;
 import top.liebes.entity.Pair;
 import top.liebes.env.Env;
+import top.liebes.graph.pdg.Graph;
 import top.liebes.util.ASTUtil;
 import top.liebes.util.ExperimentUtil;
 import top.liebes.util.FileUtil;
@@ -65,8 +66,10 @@ public class LockingPolicyController {
             // map : {class.method -> (pre permission, post permission)}
             Map<String, Pair<String, String>> permissionForMethodMap = GraphUtil.getPermissionForMethod(jFile, fieldFindVisitor.classMembers);
 
+            Map<String, Set<String>> pdg = GraphUtil.getPdgRelation(cu, fieldFindVisitor.classMembers);
+
             // map : {var -> lockName} two members write in one function should have same lock
-            Map<String, String> varLockMap = GraphUtil.getLockForVar(jFile, fieldFindVisitor.classMembers);
+            Map<String, String> varLockMap = GraphUtil.getLockForVar(jFile, fieldFindVisitor.classMembers, cu);
 
 
             // store each class member appearance in each method

@@ -11,6 +11,9 @@ import top.liebes.controller.JFileController;
 import top.liebes.entity.JFile;
 import top.liebes.entity.Pair;
 import top.liebes.env.Env;
+import top.liebes.graph.pdg.Graph;
+import top.liebes.graph.pdg.GraphFactory;
+import top.liebes.graph.pdg.Node;
 
 import java.util.*;
 
@@ -149,22 +152,30 @@ public class GraphUtil {
      * @param jFile
      * @return
      */
-    public static Map<String, String> getLockForVar(JFile jFile, Map<String, Set<String>> includedVars){
+    public static Map<String, String> getLockForVar(JFile jFile, Map<String, Set<String>> includedVars, CompilationUnit cu){
+        Map<String, Set<String>> pdgRelation = getPdgRelation(cu, includedVars);
         Map<String, String> reMap = new HashMap<>();
+        // init
+        for(Map.Entry<String, Set<String>> entry : pdgRelation.entrySet()){
+            reMap.putIfAbsent(entry.getKey(), entry.getKey());
+            for(String ch : entry.getValue()){
+                reMap.put(ch, getParent(reMap, entry.getKey()));
+            }
+        }
         for(E_ClassGraphs classGraph : jFile.getClassGraphs()){
             for(E_MethodGraph methodGraph : classGraph.getMethodgraphs()){
                 String classname = classGraph.getClassGraphName();
-                String methodName = classname + "." + ASTUtil.getUniquelyIdentifiers(methodGraph);
-                List<String> list = new ArrayList<>();
-                for(E_MVertice vertex : methodGraph.getVertices()){
-                    if("foo".equals(vertex.getVName())
-                            || "context".equals(vertex.getVName())
-                            || ! vertex.isField()
-                    ){
-                        continue;
-                    }
-                    if(includedVars.containsKey(methodName) && includedVars.get(methodName).contains(vertex.getVName())){
-                        if(
+                        String methodName = classname + "." + ASTUtil.getUniquelyIdentifiers(methodGraph);
+                        List<String> list = new ArrayList<>();
+                        for(E_MVertice vertex : methodGraph.getVertices()){
+                            if("foo".equals(vertex.getVName())
+                                    || "context".equals(vertex.getVName())
+                                    || ! vertex.isField()
+                            ){
+                                continue;
+                            }
+                            if(includedVars.containsKey(methodName) && includedVars.get(methodName).contains(vertex.getVName())){
+                                if(
                                 "share".equals(vertex.getPre_permissions())
                                         || "unique".equals(vertex.getPre_permissions())
                                         || "full".equals(vertex.getPre_permissions())
@@ -265,6 +276,44 @@ public class GraphUtil {
             }
         }
         return permissionForMethodMap;
+    }
+
+    public static Map<String, Set<String>> getPdgRelation(CompilationUnit cu, Map<String, Set<String>> includedVars){
+        Map<String, Set<String>> map = new HashMap<>();
+        cu.accept(new ASTVisitor() {
+            private String className = "";
+
+            @Override
+            public boolean visit(TypeDeclaration node) {
+                className = node.getName().toString();
+                return super.visit(node);
+            }
+
+            @Override
+            public boolean visit(MethodDeclaration methodDeclarationNode) {
+                String methodName = className + "." + ASTUtil.getUniquelyIdentifiers(methodDeclarationNode);
+                if(includedVars.containsKey(methodName)){
+                    Set<String> fields = includedVars.get(methodName);
+                    Graph graph = GraphFactory.createGraphFromMethod(methodDeclarationNode);
+                    for(Node node : graph.getNodes()){
+                        if(fields.contains(node.getVar().getName())){
+                            Set<Node> relatedNodes = node.getAllRelatedNodes();
+                            Set<String> s = new HashSet<>();
+                            for(Node n : relatedNodes){
+                                if(fields.contains(n.getVar().getName())){
+                                    s.add(className + "." + n.getVar().getName());
+                                }
+                            }
+                            map.putIfAbsent(className + "." + node.getVar().getName(), new HashSet<>());
+                            map.get(className + "." + node.getVar().getName()).addAll(s);
+                        }
+                    }
+                }
+                return super.visit(methodDeclarationNode);
+            }
+        });
+
+        return map;
     }
 }
 
