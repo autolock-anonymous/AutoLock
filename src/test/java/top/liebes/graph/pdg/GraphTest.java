@@ -9,6 +9,28 @@ import static org.junit.Assert.*;
 public class GraphTest {
 
     @Test
+    public void test(){
+        String s = "            stream.read();\n" +
+                "            stream.markSupported();\n" +
+                "            stream.available();\n" +
+                "            stream.mark(100);\n" +
+                "            stream.reset();\n" +
+                "            stream.skip(1000);\n" +
+                "            stream.read3(bytes, 0, 10000);\n" +
+                "            stream.read3(bytes, 30000, 70000);\n" +
+                "            stream.read3(bytes, 7, 40000);\n" +
+                "            stream.read3(bytes, 90000, 99000);";
+        String[] arr = s.split(";\n");
+        String res = "";
+        for(int i = 0; i < arr.length; i ++){
+            res += "case " + i + ":\n" + arr[i].trim() + ";\nbreak;\n";
+        }
+        res += "default:\nbreak;\n";
+        res = String.format("int id = random.nextInt(%d);\nswitch (id){\n%s}", arr.length, res);
+        System.out.println(res);
+    }
+
+    @Test
     public void print() {
         ASTParser parser = ASTParser.newParser(Env.JAVA_VERSION);
         String s = "package working_examples;\n" +

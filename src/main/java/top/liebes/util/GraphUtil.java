@@ -153,41 +153,50 @@ public class GraphUtil {
      * @return
      */
     public static Map<String, String> getLockForVar(JFile jFile, Map<String, Set<String>> includedVars, CompilationUnit cu){
-        Map<String, Set<String>> pdgRelation = getPdgRelation(cu, includedVars);
+//        Map<String, Set<String>> pdgRelation = getPdgRelation(cu, includedVars);
         Map<String, String> reMap = new HashMap<>();
         // init
-        for(Map.Entry<String, Set<String>> entry : pdgRelation.entrySet()){
-            reMap.putIfAbsent(entry.getKey(), entry.getKey());
-            for(String ch : entry.getValue()){
-                reMap.put(ch, getParent(reMap, entry.getKey()));
-            }
-        }
+//        for(Map.Entry<String, Set<String>> entry : pdgRelation.entrySet()){
+//            reMap.putIfAbsent(entry.getKey(), entry.getKey());
+//            for(String ch : entry.getValue()){
+//                reMap.put(ch, getParent(reMap, entry.getKey()));
+//            }
+//        }
         for(E_ClassGraphs classGraph : jFile.getClassGraphs()){
             for(E_MethodGraph methodGraph : classGraph.getMethodgraphs()){
                 String classname = classGraph.getClassGraphName();
-                        String methodName = classname + "." + ASTUtil.getUniquelyIdentifiers(methodGraph);
-                        List<String> list = new ArrayList<>();
-                        for(E_MVertice vertex : methodGraph.getVertices()){
-                            if("foo".equals(vertex.getVName())
-                                    || "context".equals(vertex.getVName())
-                                    || ! vertex.isField()
-                            ){
-                                continue;
-                            }
-                            if(includedVars.containsKey(methodName) && includedVars.get(methodName).contains(vertex.getVName())){
-                                if(
+                String methodName = classname + "." + ASTUtil.getUniquelyIdentifiers(methodGraph);
+                // write list
+                List<String> list = new ArrayList<>();
+                // read list
+                List<String> rList = new ArrayList<>();
+                for(E_MVertice vertex : methodGraph.getVertices()){
+                    if("foo".equals(vertex.getVName())
+                            || "context".equals(vertex.getVName())
+                            || ! vertex.isField()
+                    ){
+                        continue;
+                    }
+                    if(includedVars.containsKey(methodName) && includedVars.get(methodName).contains(vertex.getVName())){
+                        if(
                                 "share".equals(vertex.getPre_permissions())
                                         || "unique".equals(vertex.getPre_permissions())
                                         || "full".equals(vertex.getPre_permissions())
                         ){
                             list.add(classname + "." + vertex.getVName());
                         }
+                        else if ("pure".equals(vertex.getPre_permissions()) || "immutable".equals(vertex.getPre_permissions())){
+                            rList.add(classname + "." + vertex.getVName());
+                        }
                     }
                 }
                 if(list.size() > 0){
                     reMap.putIfAbsent(list.get(0), list.get(0));
                     for(int i = 1; i < list.size(); i ++){
-                        reMap.put(list.get(i), getParent(reMap, list.get(0)));
+                        reMap.put(getParent(reMap, list.get(i)), getParent(reMap, list.get(0)));
+                    }
+                    for(int i = 0; i < rList.size(); i ++){
+                        reMap.put(getParent(reMap, rList.get(i)), getParent(reMap, list.get(0)));
                     }
                 }
             }
@@ -221,6 +230,7 @@ public class GraphUtil {
             logger.error("error, null pointer");
             return null;
         }
+        map.putIfAbsent(s, s);
         if(s.equals(map.get(s))){
             return s;
         }

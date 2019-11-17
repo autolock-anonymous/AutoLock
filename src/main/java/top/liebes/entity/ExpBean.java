@@ -26,7 +26,7 @@ public class ExpBean {
 
     private int newLockDeclaration;
 
-    private int totalLockDeclaration;
+    private  Map<String, Integer>  totalLockDeclaration;
 
     private int newLockInsertion;
 
@@ -45,7 +45,7 @@ public class ExpBean {
         this.numberOfClass = -1;
         this.numberOfMethod = -1;
         this.newLockDeclaration = 0;
-        this.totalLockDeclaration = 0;
+        this.totalLockDeclaration = new HashMap<>();
         this.newLockInsertion = 0;
         this.totalLockInsertion = 0;
         this.fieldsCount = new HashMap<>();
@@ -131,11 +131,11 @@ public class ExpBean {
         this.newLockDeclaration = newLockDeclaration;
     }
 
-    public int getTotalLockDeclaration() {
+    public Map<String, Integer> getTotalLockDeclaration() {
         return totalLockDeclaration;
     }
 
-    public void setTotalLockDeclaration(int totalLockDeclaration) {
+    public void setTotalLockDeclaration(Map<String, Integer> totalLockDeclaration) {
         this.totalLockDeclaration = totalLockDeclaration;
     }
 

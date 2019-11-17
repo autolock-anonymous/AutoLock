@@ -31,8 +31,9 @@ public class ExperimentUtil {
     public static void increaseNewLockDeclaration(){
         expInfo.setNewLockDeclaration(expInfo.getNewLockDeclaration() + 1);
     }
-    public static void increaseTotalLockDeclaration(){
-        expInfo.setTotalLockDeclaration(expInfo.getTotalLockDeclaration() + 1);
+    public static void increaseTotalLockDeclaration(String name){
+        expInfo.getTotalLockDeclaration().putIfAbsent(name, 0);
+        expInfo.getTotalLockDeclaration().computeIfPresent(name, (k, v) -> ++v);
     }
     public static void increaseMethod(){
         expInfo.setNumberOfMethod(expInfo.getNumberOfMethod() + 1);
@@ -91,24 +92,30 @@ public class ExperimentUtil {
     public static void print(){
         calClassInfo();
         String[] s = Env.SOURCE_FOLDER.split("/");
-        int total = 0;
+        int totalFields = 0;
+        int totalLocks = 0;
         for(Map.Entry<String, Integer> entry : expInfo.getFieldsCount().entrySet()){
-            total += entry.getValue();
+            totalFields += entry.getValue();
+        }
+        for(Map.Entry<String, Integer> entry : expInfo.getTotalLockDeclaration().entrySet()){
+            totalLocks += entry.getValue();
         }
         System.out.println(s[s.length - 2] + "/" + s[s.length - 1] + " | "
                 + expInfo.getNumberOfClass() + " | "
                 + expInfo.getNumberOfMethod() + " | "
-                + expInfo.getTotalLockDeclaration() + " | "
-                + expInfo.getTotalLockInsertion() + " | "
-                + expInfo.getNumberOfPure() + " | "
-                + expInfo.getNumberOfShare() + " | "
-                + expInfo.getNumberOfFull() + " | "
-                + expInfo.getNumberOfUnique() + " | "
+                + totalFields + " | "
+                + totalLocks + " | "
+//                + expInfo.getTotalLockInsertion() + " | "
+//                + expInfo.getNumberOfPure() + " | "
+//                + expInfo.getNumberOfShare() + " | "
+//                + expInfo.getNumberOfFull() + " | "
+//                + expInfo.getNumberOfUnique() + " | "
                 + expInfo.getSip4jAnalysisTime() + " | "
                 + expInfo.getInferLockTime() + " | "
-                + expInfo.getApplyLockTime() + " | "
-                + total
+                + expInfo.getApplyLockTime()
         );
-
+//        for(Map.Entry<String, Integer> entry : expInfo.getTotalLockDeclaration().entrySet()){
+//            System.out.println(entry.getKey() + " " + entry.getValue());
+//        }
     }
 }

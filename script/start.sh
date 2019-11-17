@@ -1,6 +1,9 @@
 #! /bin/bash
 SOURCE_FOLDER=/Users/liebes/project/laboratory/Sip4J
 
+# shellcheck disable=SC2028
+printf "benchmark | class | method | fields | locks | sip4j-t | infer-t | apply-t \n"
+
 function func(){
     for file in `cat benchmark.txt`
     do
