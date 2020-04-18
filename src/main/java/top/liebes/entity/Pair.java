@@ -52,4 +52,12 @@ public class Pair<K, V> {
     public int hashCode() {
         return Objects.hash(v1, v2);
     }
+
+    @Override
+    public String toString() {
+        return "Pair{" +
+                "v1=" + v1 +
+                ", v2=" + v2 +
+                '}';
+    }
 }

@@ -42,19 +42,16 @@ public class FieldFindVisitor extends ASTVisitor {
                 IVariableBinding variableBinding = (IVariableBinding) binding;
                 if(variableBinding.isField() && ! Modifier.isFinal(variableBinding.getModifiers())){
                     // mapping field to map
-                    if(! Modifier.isFinal(variableBinding.getModifiers())){
-                        classMembers.putIfAbsent(classname + "." + methodName, new HashSet<>());
-                        classMembers.computeIfPresent(classname + "." + methodName, (k, v) -> {
-                            v.add(node.getIdentifier());
-                            return v;
-                        });
-                    }
+                    classMembers.putIfAbsent(classname + "." + methodName, new HashSet<>());
+                    classMembers.computeIfPresent(classname + "." + methodName, (k, v) -> {
+                        v.add(node.getIdentifier());
+                        return v;
+                    });
                 }
             }
         }
         return super.visit(node);
     }
-
 
     @Override
     public boolean visit(TypeDeclaration node){

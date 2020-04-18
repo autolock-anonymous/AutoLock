@@ -31,6 +31,10 @@ public class FileUtil {
                 sb.append(line + "\n");
             }
             contents = new char[sb.length()];
+            if(sb.length() == 0){
+                logger.error(file.getPath() + " is blank");
+                return new char[0];
+            }
             sb.getChars(0, sb.length() - 1, contents, 0);
 
             assert (contents.length > 0);
